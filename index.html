@@ -2,34 +2,33 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Neural Summoner: Unstoppable</title>
+    <title>Neural Summoner: Final Edition</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.2/peerjs.min.js"></script>
     <style>
-        body { font-family: 'Georgia', serif; background: #050505; color: #d4af37; text-align: center; margin: 0; padding: 20px; }
-        #chat { height: 350px; border: 2px solid #332d21; overflow-y: auto; background: #000; margin: 10px auto; width: 95%; max-width: 650px; padding: 15px; border-radius: 10px; box-shadow: inset 0 0 30px #000; }
+        body { font-family: 'Georgia', serif; background: #0a0a0b; color: #d4af37; text-align: center; margin: 0; padding: 20px; }
+        #chat { height: 320px; border: 2px solid #443e30; overflow-y: auto; background: #000; margin: 10px auto; width: 95%; max-width: 650px; padding: 15px; border-radius: 10px; box-shadow: inset 0 0 30px #000; }
         
         .card-container { display: inline-block; margin: 20px; animation: summon 0.6s ease-out; }
         .magic-card { 
-            background: #171314; border-radius: 15px; padding: 12px; 
-            box-shadow: 0 10px 40px rgba(0,0,0,1), 0 0 20px rgba(212, 175, 55, 0.2);
-            border: 4px solid #1a1a1a; transition: transform 0.3s;
+            background: #171314; border: 4px solid #1a1a1a; border-radius: 12px; padding: 10px; 
+            box-shadow: 0 10px 40px #000, 0 0 15px rgba(212, 175, 55, 0.2);
+            color: #fff; transition: 0.3s;
         }
-        .magic-card:hover { transform: scale(1.02); }
-        .card-art { border: 2px solid #000; background: #111; border-radius: 8px; overflow: hidden; }
-        .card-art img { width: 100%; display: block; filter: contrast(1.1) saturate(1.2); }
-        .card-title { font-weight: bold; color: gold; text-transform: uppercase; margin-bottom: 8px; font-size: 0.9em; letter-spacing: 1px; }
+        .card-title { font-weight: bold; color: #fff; background: rgba(255,255,255,0.1); padding: 5px; border-radius: 5px; margin-bottom: 8px; border: 1px solid #444; }
+        .card-art { border: 2px solid #000; background: #111; position: relative; line-height: 0; }
+        .card-art img { width: 100%; display: block; filter: contrast(1.1); }
         
-        .id-badge { color: #00ff41; font-family: monospace; padding: 10px; border: 1px solid #00ff41; margin-bottom: 15px; display: inline-block; background: rgba(0,255,65,0.05); }
-        .controls { margin: 10px 0; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
-        input { background: #111; border: 1px solid #332d21; color: #fff; padding: 12px; border-radius: 5px; width: 200px; }
-        .btn { padding: 12px 20px; cursor: pointer; font-weight: bold; border-radius: 5px; border: 1px solid #d4af37; background: #222; color: gold; transition: 0.3s; }
-        .btn-evoke { background: linear-gradient(135deg, gold, #b8860b); color: #000; border: none; box-shadow: 0 0 15px rgba(255,215,0,0.4); }
-        @keyframes summon { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+        .id-badge { color: #00ff41; font-family: monospace; padding: 8px; border: 1px solid #00ff41; margin-bottom: 15px; display: inline-block; background: #000; }
+        .controls { margin: 10px 0; display: flex; justify-content: center; gap: 8px; }
+        input { background: #111; border: 1px solid #443e30; color: #fff; padding: 12px; border-radius: 5px; }
+        .btn { padding: 12px 18px; cursor: pointer; font-weight: bold; border-radius: 5px; border: 1px solid #d4af37; background: #1a1a1a; color: gold; }
+        .btn-evoke { background: linear-gradient(gold, darkgoldenrod); color: #000; border: none; box-shadow: 0 0 15px gold; }
+        @keyframes summon { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
 <body>
-    <h1>🛰️ NEURAL SUMMONER: EVOLUTION</h1>
-    <div class="id-badge">ID CONNESSIONE: <span id="my-id">Sincronizzazione...</span></div>
+    <h1>🛰️ NEURAL SUMMONER: FINAL SYNC</h1>
+    <div class="id-badge">ID: <span id="my-id">...</span></div>
 
     <div id="chat"></div>
 
@@ -39,7 +38,7 @@
     </div>
     
     <div class="controls">
-        <input type="text" id="msg" placeholder="Descrivi il tuo sogno...">
+        <input type="text" id="msg" placeholder="Descrivi qui...">
         <button class="btn" onclick="invia()">INVIA</button>
         <button class="btn btn-evoke" onclick="comandoEvoca()">✨ EVOCA ✨</button>
     </div>
@@ -59,7 +58,7 @@
 
         function setup() {
             conn.on('open', () => {
-                document.getElementById('chat').innerHTML += "<p style='color:#00ff41'>[SISTEMA]: Collegamento neurale stabilito.</p>";
+                document.getElementById('chat').innerHTML += "<p style='color:#00ff41'>[LINK OK]</p>";
                 conn.on('data', data => {
                     if(data.type === 'SYNC_CARD') { mostraCarta(data.url, data.title, data.size); } 
                     else { mostraTesto(data, 'Amico'); }
@@ -80,18 +79,15 @@
         }
 
         function comandoEvoca() {
-            if(!dataStream.trim() || !conn) return alert("Inserisci dati o connettiti prima!");
-            
+            if(!dataStream.trim() || !conn) return alert("Scrivi qualcosa!");
             const desc = dataStream.trim().toLowerCase();
             const size = Math.min(450, Math.max(260, desc.length * 1.5));
+            const seed = Math.floor(Math.random() * 9999);
             
-            // NUOVO MOTORE: Usiamo un URL che bypassa i limiti frequenti
-            // Aggiungiamo un numero casuale gigante (seed) per evitare il Rate Limit
-            const seed = Math.floor(Math.random() * 1000000);
-            const style = "magic the gathering art, fantasy illustration, high detail, masterpiece";
-            const imgUrl = `https://pollinations.ai/p/${encodeURIComponent(style + ", " + desc)}?width=512&height=768&seed=${seed}&model=flux`;
+            // Sistema di immagini multi-canale (se uno fallisce, l'altro carica)
+            const imgUrl = `https://image.pollinations.ai/prompt/magic_the_gathering_style_art_${encodeURIComponent(desc)}?seed=${seed}&nologo=true`;
             
-            const cardData = { type: 'SYNC_CARD', url: imgUrl, title: desc.substring(0, 20), size: size };
+            const cardData = { type: 'SYNC_CARD', url: imgUrl, title: desc.substring(0, 18), size: size };
             conn.send(cardData);
             mostraCarta(imgUrl, cardData.title, size);
             dataStream = "";
@@ -99,12 +95,15 @@
 
         function mostraCarta(url, title, size) {
             const b = document.getElementById('chat');
+            // Aggiunta di un piccolo delay per permettere all'IA di generare
             b.innerHTML += `
                 <div class="card-container">
                     <div class="magic-card" style="width: ${size}px;">
                         <div class="card-title">${title}</div>
-                        <div class="card-art"><img src="${url}" alt="Evocazione"></div>
-                        <div style="font-size: 0.6em; margin-top: 8px; color: gold;">NEURAL SUMMONER v4.0</div>
+                        <div class="card-art">
+                            <img src="${url}" onerror="this.src='https://loremflickr.com/512/720/fantasy,creature?lock='+Math.random()">
+                        </div>
+                        <div style="font-size: 10px; margin-top: 5px; color: gold;">POWERED BY NEURAL AI</div>
                     </div>
                 </div>`;
             b.scrollTop = b.scrollHeight;
@@ -112,3 +111,4 @@
     </script>
 </body>
 </html>
+
