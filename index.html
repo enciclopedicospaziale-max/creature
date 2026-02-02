@@ -2,129 +2,171 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Neural Summoner: God Mode</title>
+    <title>Neural Grimoire v6.0</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.2/peerjs.min.js"></script>
     <style>
-        body { font-family: 'Georgia', serif; background: #050505; color: #d4af37; text-align: center; margin: 0; padding: 20px; }
-        #chat { height: 350px; border: 2px solid #332d21; overflow-y: auto; background: #000; margin: 10px auto; width: 95%; max-width: 650px; padding: 15px; border-radius: 10px; box-shadow: inset 0 0 30px #000; }
+        :root { --gold: #d4af37; --bg: #080808; --card-bg: #121212; }
+        body { background: var(--bg); color: var(--gold); font-family: 'Palatino', serif; margin: 0; padding: 20px; overflow-x: hidden; }
         
-        .card-container { display: inline-block; margin: 20px; animation: summon 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; }
-        .magic-card { 
-            background: #171314; border-radius: 15px; padding: 12px; 
-            box-shadow: 0 10px 40px rgba(0,0,0,1), 0 0 25px rgba(212, 175, 55, 0.4);
-            border: 4px solid #1a1a1a; transition: all 0.3s; color: white;
+        /* CONTENITORE CHAT */
+        #chat { 
+            height: 400px; max-width: 800px; margin: 0 auto;
+            background: #000; border: 3px solid #2a2a2a; border-radius: 15px;
+            overflow-y: auto; padding: 20px; box-shadow: inset 0 0 50px #000, 0 0 20px rgba(212,175,55,0.1);
         }
-        .card-art { border: 2px solid #000; background: #111; border-radius: 8px; overflow: hidden; }
-        .card-art img { width: 100%; display: block; filter: contrast(1.1) saturate(1.2); min-height: 200px; }
-        .card-title { font-weight: bold; color: gold; text-transform: uppercase; margin-bottom: 8px; font-size: 1em; letter-spacing: 1px; }
-        
-        /* Statistiche stile Magic/Digimon */
-        .stats { position: absolute; bottom: 10px; right: 10px; background: rgba(200, 0, 0, 0.9); border: 2px solid gold; padding: 5px 10px; border-radius: 5px; font-weight: bold; color: white; font-family: monospace; box-shadow: 0 0 10px red; }
 
-        .id-badge { color: #00ff41; font-family: monospace; padding: 10px; border: 1px solid #00ff41; margin-bottom: 15px; display: inline-block; background: rgba(0,255,65,0.05); }
-        .controls { margin: 10px 0; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
-        input { background: #111; border: 1px solid #332d21; color: #fff; padding: 12px; border-radius: 5px; width: 200px; }
-        .btn { padding: 12px 20px; cursor: pointer; font-weight: bold; border-radius: 5px; border: 1px solid #d4af37; background: #222; color: gold; }
-        .btn-evoke { background: linear-gradient(135deg, gold, #8a6d3b); color: #000; border: none; box-shadow: 0 0 15px gold; }
+        /* STILE CARTA "IL BISCOTTO" */
+        .card-wrapper { display: inline-block; margin: 30px; perspective: 1000px; }
+        .magic-card {
+            background: var(--card-bg); width: 300px; border-radius: 18px; padding: 15px;
+            border: 5px solid #1a1a1a; box-shadow: 0 15px 50px #000;
+            position: relative; animation: summonAnim 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+            background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
+        }
+        .magic-card::before {
+            content: ""; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px;
+            background: linear-gradient(45deg, transparent, var(--gold), transparent);
+            z-index: -1; border-radius: 20px; opacity: 0.3;
+        }
+        .card-header { font-weight: bold; text-transform: uppercase; border-bottom: 2px solid var(--gold); margin-bottom: 10px; padding-bottom: 5px; font-size: 1.1em; }
+        .card-art { 
+            width: 100%; height: 350px; background: #000; border-radius: 10px; 
+            overflow: hidden; border: 2px solid #333; box-shadow: inset 0 0 20px #000;
+        }
+        .card-art img { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; filter: contrast(1.1) brightness(1.1); }
         
-        @keyframes summon { from { opacity: 0; transform: scale(0.2) translateY(100px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        /* STATS */
+        .power-box { 
+            position: absolute; bottom: 10px; right: 10px; 
+            background: #800; color: #fff; padding: 8px 15px;
+            border: 3px solid var(--gold); border-radius: 10px;
+            font-family: 'Courier New', monospace; font-weight: bold; font-size: 1.2em;
+        }
+
+        /* INTERFACCIA */
+        .controls { margin-top: 20px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        input { background: #111; border: 1px solid var(--gold); color: #fff; padding: 12px; border-radius: 8px; width: 250px; }
+        .btn { padding: 12px 25px; cursor: pointer; font-weight: bold; border-radius: 8px; border: none; text-transform: uppercase; transition: 0.3s; }
+        .btn-link { background: #333; color: #fff; }
+        .btn-evoke { background: var(--gold); color: #000; box-shadow: 0 0 20px rgba(212,175,55,0.4); }
+        .btn-evoke:hover { transform: scale(1.05); background: #fff; }
+
+        .id-label { font-family: monospace; color: #00ff41; margin-bottom: 15px; font-size: 1.1em; }
+
+        @keyframes summonAnim {
+            0% { opacity: 0; transform: rotateY(90deg) scale(0.5); filter: brightness(3); }
+            100% { opacity: 1; transform: rotateY(0deg) scale(1); filter: brightness(1); }
+        }
     </style>
 </head>
 <body>
-    <h1>🛰️ NEURAL SYNC: GOD MODE</h1>
-    <div class="id-badge">ID: <span id="my-id">Sincronizzazione...</span></div>
+
+    <div class="id-label">NEURAL-LINK ID: <span id="my-id">SINCRO IN CORSO...</span></div>
 
     <div id="chat"></div>
 
     <div class="controls">
-        <input type="text" id="friend-id" placeholder="ID Amico">
-        <button class="btn" onclick="connetti()">LINK</button>
+        <input type="text" id="friend-id" placeholder="ID DEL COMPAGNO">
+        <button class="btn btn-link" onclick="connect()">CONNETTI GRIMORIO</button>
     </div>
-    
+
     <div class="controls">
-        <input type="text" id="msg" placeholder="Concetti...">
-        <button class="btn" onclick="invia()">INVIA</button>
-        <button class="btn btn-evoke" onclick="comandoEvoca()">✨ EVOCA ✨</button>
+        <input type="text" id="msg" placeholder="Descrivi il destino...">
+        <button class="btn btn-link" onclick="sendMsg()">INVIA</button>
+        <button class="btn btn-evoke" onclick="evoke()">✨ EVOCA CREATURA ✨</button>
     </div>
 
-    <script>
-        let peer = new Peer();
-        let conn;
-        let dataStream = "";
+<script>
+    const peer = new Peer();
+    let conn;
+    let dataStream = "";
 
-        peer.on('open', (id) => { document.getElementById('my-id').innerText = id; });
-        peer.on('connection', (c) => { conn = c; setup(); });
+    peer.on('open', id => document.getElementById('my-id').innerText = id);
+    peer.on('connection', c => { conn = c; setup(); });
 
-        function connetti() {
-            conn = peer.connect(document.getElementById('friend-id').value);
-            setup();
-        }
+    function connect() {
+        conn = peer.connect(document.getElementById('friend-id').value);
+        setup();
+    }
 
-        function setup() {
-            conn.on('open', () => {
-                document.getElementById('chat').innerHTML += "<p style='color:#00ff41'>[SISTEMA]: Collegamento totale. Generazione pronta.</p>";
-                conn.on('data', data => {
-                    if(data.type === 'SYNC_CARD') { mostraCarta(data.url, data.title, data.size, data.atk, data.def); } 
-                    else { mostraTesto(data, 'Amico'); }
-                });
+    function setup() {
+        conn.on('open', () => {
+            document.getElementById('chat').innerHTML += `<p style="color:var(--gold)">[LINK STABILITO] Inizia il rituale...</p>`;
+            conn.on('data', d => {
+                if(d.type === 'SUMMON') renderCard(d);
+                else updateChat(d, 'Amico');
             });
+        });
+    }
+
+    function sendMsg() {
+        const m = document.getElementById('msg').value;
+        if(conn && m) { 
+            conn.send(m); 
+            updateChat(m, 'Tu'); 
+            document.getElementById('msg').value = ''; 
         }
+    }
 
-        function invia() {
-            const m = document.getElementById('msg').value;
-            if(conn && m) { conn.send(m); mostraTesto(m, 'Tu'); document.getElementById('msg').value = ''; }
-        }
+    function updateChat(t, chi) {
+        dataStream += " " + t;
+        const b = document.getElementById('chat');
+        b.innerHTML += `<p><b>${chi}:</b> ${t}</p>`;
+        b.scrollTop = b.scrollHeight;
+    }
 
-        function mostraTesto(t, chi) {
-            dataStream += " " + t;
-            const b = document.getElementById('chat');
-            b.innerHTML += `<p><b>${chi}:</b> ${t}</p>`;
-            b.scrollTop = b.scrollHeight;
-        }
+    function evoke() {
+        if(!dataStream.trim() || !conn) return alert("Il flusso magico è vuoto!");
+        
+        const content = dataStream.toLowerCase();
+        const sizeMultiplier = Math.min(2, 1 + (dataStream.length / 500));
+        
+        // --- PROCESSO DI GENERAZIONE STUDIATO ---
+        // Traduciamo i concetti in prompt artistici MTG
+        let artPrompt = "Digital fantasy painting, MTG card art style, high-detail illustration, Greg Rutkowski vibe, vibrant mystical lighting, cinematic composition, epic creature design, NO PHOTOGRAPHY, NO REALISM, vivid colors";
+        
+        if(content.includes("drago")) artPrompt += ", massive dragon scales, fire breath, ancient wyrm";
+        if(content.includes("balestra")) artPrompt += ", intricate mechanical crossbow, wood and brass, legendary weapon";
+        if(content.includes("dolce") || content.includes("bello")) artPrompt += ", ethereal glow, angelic aura, majestic scenery, masterpiece art";
+        if(content.includes("sporco") || content.includes("oscuro")) artPrompt += ", dark corrupted energy, swampy atmosphere, necromancy style";
 
-        async function comandoEvoca() {
-            if(!dataStream.trim() || !conn) return alert("Scrivi e connettiti!");
-            const desc = dataStream.trim().toLowerCase();
-            const size = Math.min(480, Math.max(260, dataStream.length * 1.8));
-            
-            // Calcolo Statistiche basato sulla lunghezza e parole "belle"
-            let bonus = desc.includes("bello") || desc.includes("dolce") || desc.includes("luce") ? 2000 : 0;
-            const atk = Math.floor(Math.random() * 3000) + (dataStream.length * 20) + bonus;
-            const def = Math.floor(Math.random() * 2500) + (dataStream.length * 15) + bonus;
+        // Costruiamo l'URL con seed unico per evitare cache e blocchi
+        const seed = Math.floor(Math.random() * 999999);
+        const finalUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(artPrompt + " -- Subject: " + dataStream)}?seed=${seed}&width=512&height=768&model=flux&nologo=true`;
 
-            let imgUrl = "";
+        // Statistiche bilanciate
+        const atk = Math.floor(Math.random() * 5000) + (dataStream.length * 10);
+        const def = Math.floor(Math.random() * 5000) + (dataStream.length * 8);
 
-            try {
-                // TENTA LEXICA (Alta Qualità)
-                const res = await fetch(`https://lexica.art/api/v1/search?q=${encodeURIComponent(desc + " fantasy digital painting")}`);
-                const data = await res.json();
-                if(data.images && data.images.length > 0) {
-                    imgUrl = data.images[Math.floor(Math.random() * 5)].src;
-                } else { throw new Error("No Lexica"); }
-            } catch (e) {
-                // BACKUP FALLBACK (Non fallisce mai)
-                imgUrl = `https://loremflickr.com/512/720/${encodeURIComponent(desc.split(' ')[0])},fantasy,art/all?lock=${Math.random()}`;
-            }
-            
-            const cardData = { type: 'SYNC_CARD', url: imgUrl, title: desc.substring(0, 20), size: size, atk: atk, def: def };
-            conn.send(cardData);
-            mostraCarta(imgUrl, cardData.title, size, atk, def);
-            dataStream = "";
-        }
+        const cardData = {
+            type: 'SUMMON',
+            url: finalUrl,
+            title: dataStream.trim().substring(0, 15),
+            atk: atk,
+            def: def,
+            scale: sizeMultiplier
+        };
 
-        function mostraCarta(url, title, size, atk, def) {
-            const b = document.getElementById('chat');
-            b.innerHTML += `
-                <div class="card-container">
-                    <div class="magic-card" style="width: ${size}px;">
-                        <div class="card-title">${title}</div>
-                        <div class="card-art"><img src="${url}" onerror="this.src='https://loremflickr.com/512/720/monster,fantasy/all'"></div>
-                        <div style="font-size: 0.6em; margin-top: 8px; color: gold; font-style: italic;">Neural Entity Summoned</div>
-                        <div class="stats">${atk} / ${def}</div>
+        conn.send(cardData);
+        renderCard(cardData);
+        dataStream = "";
+    }
+
+    function renderCard(d) {
+        const b = document.getElementById('chat');
+        b.innerHTML += `
+            <div class="card-wrapper" style="transform: scale(${d.scale})">
+                <div class="magic-card">
+                    <div class="card-header">${d.title}</div>
+                    <div class="card-art">
+                        <img src="${d.url}" onload="this.style.opacity=1" style="opacity:0">
                     </div>
-                </div>`;
-            b.scrollTop = b.scrollHeight;
-        }
-    </script>
+                    <div style="font-size: 0.8em; margin-top:10px; color:#888; font-style:italic">Creatura Neurale Evocata</div>
+                    <div class="power-box">${d.atk} / ${d.def}</div>
+                </div>
+            </div>`;
+        b.scrollTop = b.scrollHeight;
+    }
+</script>
 </body>
 </html>
