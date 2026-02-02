@@ -2,95 +2,72 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>AI Neural Summoner - Fixed</title>
+    <title>Neural Summoner Free</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.2/peerjs.min.js"></script>
     <style>
-        body { font-family: 'Times New Roman', serif; background: #050505; color: #d4af37; text-align: center; margin: 0; padding: 20px; }
-        #chat { height: 350px; border: 2px solid #332d21; overflow-y: auto; background: #000; margin: 10px auto; width: 95%; max-width: 650px; padding: 15px; border-radius: 10px; box-shadow: inset 0 0 30px #000; }
+        body { font-family: 'Georgia', serif; background: #0a0a0b; color: #d4af37; text-align: center; margin: 0; padding: 20px; }
+        #chat { height: 350px; border: 2px solid #443e30; overflow-y: auto; background: #000; margin: 10px auto; width: 95%; max-width: 650px; padding: 15px; border-radius: 10px; box-shadow: inset 0 0 30px #000; }
         
-        .card-container { display: inline-block; margin: 20px; animation: portal 0.6s ease-out; }
+        .card-container { display: inline-block; margin: 20px; animation: summon 0.5s ease-out; }
         .magic-card { 
-            background: #171314; border-radius: 12px; padding: 10px; 
-            box-shadow: 0 0 30px rgba(0,0,0,1), 0 0 20px rgba(212, 175, 55, 0.4);
-            border: 4px solid #1a1a1a; width: 300px;
+            background: #171314; border: 5px solid #222; border-radius: 12px; padding: 12px; 
+            box-shadow: 0 10px 30px #000; position: relative; color: #fff; border: 4px solid #443e30;
         }
-        .magic-card img { width: 100%; border-radius: 8px; border: 1px solid #000; }
-        .card-title { font-weight: bold; color: gold; text-transform: uppercase; margin-bottom: 5px; }
+        .card-art { border: 2px solid #000; background: #1a1a1a; overflow: hidden; }
+        .card-art img { width: 100%; display: block; filter: contrast(1.1); }
+        .card-title { font-weight: bold; color: gold; text-transform: uppercase; margin-bottom: 8px; font-size: 0.9em; border-bottom: 1px solid #444; }
         
-        .id-badge { color: #00ff41; font-family: monospace; padding: 10px; border: 1px solid #00ff41; margin-bottom: 15px; display: inline-block; background: rgba(0,255,65,0.1); }
-        .controls { margin: 10px 0; }
-        input { background: #111; border: 1px solid #d4af37; color: #fff; padding: 10px; border-radius: 5px; width: 200px; }
-        .btn { padding: 10px 20px; cursor: pointer; font-weight: bold; border-radius: 5px; border: 1px solid #d4af37; text-transform: uppercase; }
+        .id-badge { color: #00ff41; font-family: monospace; padding: 8px; border: 1px solid #00ff41; margin-bottom: 15px; display: inline-block; background: rgba(0,0,0,0.8); }
+        .controls { margin: 10px 0; display: flex; justify-content: center; gap: 5px; flex-wrap: wrap; }
+        input { background: #111; border: 1px solid #443e30; color: #fff; padding: 10px; border-radius: 5px; }
+        .btn { padding: 10px 15px; cursor: pointer; font-weight: bold; border-radius: 5px; border: 1px solid #d4af37; background: #222; color: gold; }
         .btn-evoke { background: gold; color: #000; border: none; box-shadow: 0 0 10px gold; }
-        @keyframes portal { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+        @keyframes summon { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
-    <h1>🧠 AI NEURAL SYNC</h1>
-    <div class="id-badge">IL TUO ID: <span id="my-id">...GENERANDO...</span></div>
+    <h1>🛰️ NEURAL SUMMONER FREE</h1>
+    <div class="id-badge">ID CONNESSIONE: <span id="my-id">...CARICAMENTO...</span></div>
 
     <div id="chat"></div>
 
     <div class="controls">
         <input type="text" id="friend-id" placeholder="ID Amico">
-        <button class="btn" onclick="connetti()" style="background:#222; color:white;">LINK</button>
+        <button class="btn" onclick="connetti()">LINK</button>
     </div>
     
     <div class="controls">
-        <input type="text" id="msg" placeholder="Scrivi qui...">
-        <button class="btn" onclick="invia()" style="background:#333; color:white;">INVIA</button>
-        <button class="btn btn-evoke" onclick="comandoEvoca()">✨ GENERA CARTA AI ✨</button>
+        <input type="text" id="msg" placeholder="Descrivi la creatura...">
+        <button class="btn" onclick="invia()">INVIA</button>
+        <button class="btn btn-evoke" onclick="comandoEvoca()">✨ EVOCA ✨</button>
     </div>
 
     <script>
-        // Avvio forzato di PeerJS
         let peer = new Peer();
         let conn;
         let dataStream = "";
 
-        peer.on('open', (id) => {
-            console.log('Mio ID:', id);
-            document.getElementById('my-id').innerText = id;
-        });
-
-        peer.on('error', (err) => {
-            console.error('Errore Peer:', err);
-            document.getElementById('my-id').innerText = "ERRORE CONNESSIONE";
-        });
-
-        peer.on('connection', (c) => {
-            conn = c;
-            setup();
-        });
+        peer.on('open', (id) => { document.getElementById('my-id').innerText = id; });
+        peer.on('connection', (c) => { conn = c; setup(); });
 
         function connetti() {
-            const dest = document.getElementById('friend-id').value;
-            if(!dest) return alert("Inserisci l'ID dell'amico");
-            conn = peer.connect(dest);
+            conn = peer.connect(document.getElementById('friend-id').value);
             setup();
         }
 
         function setup() {
             conn.on('open', () => {
-                const b = document.getElementById('chat');
-                b.innerHTML += "<p style='color:#00ff41'>[SISTEMA]: Collegamento neurale riuscito.</p>";
+                document.getElementById('chat').innerHTML += "<p style='color:#00ff41'>[SISTEMA]: Collegamento stabilito.</p>";
                 conn.on('data', data => {
-                    if(data.type === 'AI_CARD') {
-                        mostraCarta(data.url, data.title, data.size);
-                    } else {
-                        mostraTesto(data, 'Amico');
-                    }
+                    if(data.type === 'SYNC_CARD') { mostraCarta(data.url, data.title, data.size); } 
+                    else { mostraTesto(data, 'Amico'); }
                 });
             });
         }
 
         function invia() {
             const m = document.getElementById('msg').value;
-            if(conn && m) { 
-                conn.send(m); 
-                mostraTesto(m, 'Tu'); 
-                document.getElementById('msg').value = ''; 
-            }
+            if(conn && m) { conn.send(m); mostraTesto(m, 'Tu'); document.getElementById('msg').value = ''; }
         }
 
         function mostraTesto(t, chi) {
@@ -101,19 +78,18 @@
         }
 
         function comandoEvoca() {
-            if(!dataStream.trim() || !conn) return alert("Scrivi qualcosa prima o connettiti!");
+            if(!dataStream.trim() || !conn) return alert("Scrivi qualcosa e connettiti!");
             
-            const p = dataStream.trim().toLowerCase();
-            const size = Math.min(450, Math.max(250, p.length * 1.8));
+            const desc = dataStream.trim().toLowerCase();
+            const size = Math.min(400, Math.max(240, desc.length * 1.5));
             
-            // Logica AI: costruisce un prompt basato sulle tue parole
-            let aiPrompt = `Magic the Gathering card art style, ${p}, high fantasy, detailed illustration, digital painting`;
-            if(p.includes("dolce") || p.includes("bello")) aiPrompt += ", majestic, ethereal, bright lighting";
-            if(p.includes("cattivo") || p.includes("sporco")) aiPrompt += ", dark, corrupted, creepy, high contrast";
+            // Usiamo un generatore che NON chiede abbonamenti
+            // Aggiungiamo tag per stile Magic e Digimon
+            const promptIA = encodeURIComponent(`magic the gathering style, fantasy illustration, ${desc}, epic, high quality`);
+            const seed = Math.floor(Math.random() * 99999);
+            const imgUrl = `https://image.pollinations.ai/prompt/${promptIA}?seed=${seed}&width=512&height=720&nologo=true`;
             
-            const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(aiPrompt)}?width=512&height=720&seed=${Math.random()}`;
-            
-            const cardData = { type: 'AI_CARD', url: imgUrl, title: p.substring(0, 20), size: size };
+            const cardData = { type: 'SYNC_CARD', url: imgUrl, title: desc.substring(0, 15), size: size };
             conn.send(cardData);
             mostraCarta(imgUrl, cardData.title, size);
             dataStream = "";
@@ -125,7 +101,8 @@
                 <div class="card-container">
                     <div class="magic-card" style="width: ${size}px;">
                         <div class="card-title">${title}</div>
-                        <img src="${url}">
+                        <div class="card-art"><img src="${url}"></div>
+                        <div style="font-size: 0.7em; margin-top: 5px; color: #aaa;">EVOCAZIONE NEURALE COMPLETA</div>
                     </div>
                 </div>`;
             b.scrollTop = b.scrollHeight;
@@ -133,4 +110,3 @@
     </script>
 </body>
 </html>
-
