@@ -2,34 +2,33 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Neural Summoner: Unlimited</title>
+    <title>Neural Summoner: Pure Art</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.2/peerjs.min.js"></script>
     <style>
         body { font-family: 'Georgia', serif; background: #050505; color: #d4af37; text-align: center; margin: 0; padding: 20px; }
         #chat { height: 350px; border: 2px solid #332d21; overflow-y: auto; background: #000; margin: 10px auto; width: 95%; max-width: 650px; padding: 15px; border-radius: 10px; box-shadow: inset 0 0 30px #000; }
         
-        .card-container { display: inline-block; margin: 20px; animation: summon 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .card-container { display: inline-block; margin: 20px; animation: summon 0.6s ease-out; }
         .magic-card { 
-            background: #171314; border-radius: 15px; padding: 12px; 
+            background: #171314; border-radius: 15px; padding: 10px; 
             box-shadow: 0 10px 40px rgba(0,0,0,1), 0 0 20px rgba(212, 175, 55, 0.3);
-            border: 4px solid #1a1a1a; transition: transform 0.3s;
+            border: 4px solid #1a1a1a; transition: all 0.3s;
         }
-        .card-art { border: 2px solid #000; background: #111; border-radius: 8px; overflow: hidden; position: relative; }
-        .card-art img { width: 100%; display: block; filter: contrast(1.1) saturate(1.1); }
-        .card-title { font-weight: bold; color: gold; text-transform: uppercase; margin-bottom: 8px; font-size: 0.9em; letter-spacing: 1px; border-bottom: 1px solid #333; padding-bottom: 4px; }
+        .card-art { border: 2px solid #000; background: #111; border-radius: 8px; overflow: hidden; }
+        .card-art img { width: 100%; display: block; filter: contrast(1.1) saturate(1.2); }
+        .card-title { font-weight: bold; color: gold; text-transform: uppercase; margin-bottom: 8px; font-size: 0.9em; letter-spacing: 1px; }
         
         .id-badge { color: #00ff41; font-family: monospace; padding: 10px; border: 1px solid #00ff41; margin-bottom: 15px; display: inline-block; background: rgba(0,255,65,0.05); }
         .controls { margin: 10px 0; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
         input { background: #111; border: 1px solid #332d21; color: #fff; padding: 12px; border-radius: 5px; width: 200px; }
         .btn { padding: 12px 20px; cursor: pointer; font-weight: bold; border-radius: 5px; border: 1px solid #d4af37; background: #222; color: gold; }
-        .btn-evoke { background: linear-gradient(135deg, #d4af37, #8a6d3b); color: #000; border: none; box-shadow: 0 0 15px rgba(212,175,0,0.4); }
-        
-        @keyframes summon { from { opacity: 0; transform: scale(0.3) rotate(-10deg); } to { opacity: 1; transform: scale(1) rotate(0); } }
+        .btn-evoke { background: linear-gradient(135deg, gold, #8a6d3b); color: #000; border: none; box-shadow: 0 0 15px gold; }
+        @keyframes summon { from { opacity: 0; transform: scale(0.5) translateY(50px); } to { opacity: 1; transform: scale(1) translateY(0); } }
     </style>
 </head>
 <body>
-    <h1>🛰️ NEURAL SUMMONER: NO-LIMIT</h1>
-    <div class="id-badge">ID: <span id="my-id">...</span></div>
+    <h1>🛰️ NEURAL SUMMONER: ART GEN</h1>
+    <div class="id-badge">ID CONNESSIONE: <span id="my-id">Sincronizzazione...</span></div>
 
     <div id="chat"></div>
 
@@ -39,7 +38,7 @@
     </div>
     
     <div class="controls">
-        <input type="text" id="msg" placeholder="Parole chiave...">
+        <input type="text" id="msg" placeholder="Concetti della creatura...">
         <button class="btn" onclick="invia()">INVIA</button>
         <button class="btn btn-evoke" onclick="comandoEvoca()">✨ EVOCA ✨</button>
     </div>
@@ -59,7 +58,7 @@
 
         function setup() {
             conn.on('open', () => {
-                document.getElementById('chat').innerHTML += "<p style='color:#00ff41'>[COLLEGAMENTO ATTIVO]</p>";
+                document.getElementById('chat').innerHTML += "<p style='color:#00ff41'>[COLLEGAMENTO OK]</p>";
                 conn.on('data', data => {
                     if(data.type === 'SYNC_CARD') { mostraCarta(data.url, data.title, data.size); } 
                     else { mostraTesto(data, 'Amico'); }
@@ -80,26 +79,18 @@
         }
 
         function comandoEvoca() {
-            if(!dataStream.trim() || !conn) return alert("Scrivi qualcosa!");
+            if(!dataStream.trim() || !conn) return alert("Scrivi e connettiti!");
             
             const desc = dataStream.trim().toLowerCase();
-            // Più parole = carta più grande
-            const size = Math.min(450, Math.max(250, dataStream.length * 1.6));
+            const size = Math.min(480, Math.max(250, dataStream.length * 1.7));
             
-            // LOGICA DI RICERCA: Estraiamo i concetti per trovare immagini reali fantasy/sci-fi
-            let categoria = "fantasy,creature,conceptart";
-            if(desc.includes("drago")) categoria = "dragon,fire,painting";
-            if(desc.includes("balestra") || desc.includes("armi")) categoria = "weapon,knight,warrior";
-            if(desc.includes("blu") || desc.includes("acqua")) categoria = "water,blue,spirit";
-            if(desc.includes("tecnologia") || desc.includes("robot")) categoria = "cyberpunk,robot,mecha";
+            // COSTRUZIONE PROMPT ANTI-FOTO
+            // Usiamo Pollinations ma con un trucco nel link per evitare blocchi e forzare lo stile arte
+            const artStyle = "digital painting, fantasy art style, magic the gathering card illustration, high quality, sharp focus, no realistic photography, vibrant colors";
+            const seed = Math.floor(Math.random() * 1000000);
             
-            // Se le parole sono "dolci" o "belle" cerchiamo illustrazioni armoniose
-            if(desc.includes("bello") || desc.includes("luce")) categoria += ",ethereal,celestial";
-            // Se sono "sporche" o "brutte" cerchiamo dark art
-            if(desc.includes("cazzo") || desc.includes("merda") || desc.includes("oscurità")) categoria = "horror,dark,glitch,monster";
-
-            const lock = Math.floor(Math.random() * 50000);
-            const imgUrl = `https://loremflickr.com/512/720/${categoria}/all?lock=${lock}`;
+            // Usiamo il modello "Flux" o "Turbo" che è molto potente per l'arte
+            const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(artStyle + " : " + desc)}?width=512&height=720&seed=${seed}&model=flux&nologo=true`;
             
             const cardData = { type: 'SYNC_CARD', url: imgUrl, title: desc.substring(0, 20), size: size };
             conn.send(cardData);
@@ -113,8 +104,8 @@
                 <div class="card-container">
                     <div class="magic-card" style="width: ${size}px;">
                         <div class="card-title">${title}</div>
-                        <div class="card-art"><img src="${url}" alt="Neural Image"></div>
-                        <div style="font-size: 0.6em; margin-top: 8px; color: gold; text-shadow: 1px 1px #000;">STILE MAGIC: THE GATHERING</div>
+                        <div class="card-art"><img src="${url}" alt="Neural Art"></div>
+                        <div style="font-size: 0.6em; margin-top: 8px; color: gold;">NEURAL SUMMONER ART v5</div>
                     </div>
                 </div>`;
             b.scrollTop = b.scrollHeight;
