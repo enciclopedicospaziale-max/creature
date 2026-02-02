@@ -406,6 +406,16 @@
         }
     }
 </script>
+    function connetti() {
+    // Questa riga fa apparire la finestrella dove incolli l'ID
+    const idAmico = prompt("Incolla qui l'ID del tuo amico:");
+    
+    if (idAmico) {
+        conn = peer.connect(idAmico);
+        setupChat();
+        alert("Connessione in corso a: " + idAmico);
+    }
+}
     <div style="background: white; padding: 10px; border: 2px solid black; margin: 10px; color: black;">
     <p>Il tuo ID: <b id="display-id">Caricamento...</b></p>
     <button onclick="connetti()" style="background: #4CAF50; color: white; padding: 10px; cursor: pointer;">
@@ -419,6 +429,7 @@
 </body>
 
 </html>
+
 
 
 
