@@ -362,7 +362,53 @@
     // Puoi far apparire questo ID in un angolo della tua chat
   });
 </script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<script>
+    const peer = new Peer();
+    let conn;
+    let count = 0;
+
+    // Mostra il tuo ID appena la pagina carica
+    peer.on('open', id => {
+        alert("Il tuo ID è: " + id + ". Invialo al tuo amico!");
+    });
+
+    // Ricevi la chiamata dall'amico
+    peer.on('connection', c => {
+        conn = c;
+        setup();
+    });
+
+    function connetti() {
+        const idAmico = prompt("Inserisci l'ID del tuo amico:");
+        conn = peer.connect(idAmico);
+        setup();
+    }
+
+    function setup() {
+        conn.on('data', data => aggiungiMessaggio(data, 'Amico'));
+    }
+
+    function invia() {
+        const msg = document.querySelector('input').value;
+        aggiungiMessaggio(msg, 'Tu');
+        if(conn) conn.send(msg);
+        document.querySelector('input').value = '';
+    }
+
+    function aggiungiMessaggio(testo, chi) {
+        count++;
+        const area = document.querySelector('.chat-window'); // Assicurati che la tua classe si chiami così
+        area.innerHTML += `<p><b>${chi}:</b> ${testo}</p>`;
+        
+        if (count % 5 === 0) {
+            area.innerHTML += `<div style="border:2px solid gold; padding:10px;">✨ EVOLUZIONE IN CORSO!</div>`;
+        }
+    }
+</script>
+    
 </body>
 
 </html>
+
 
