@@ -2,34 +2,36 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Neural Summoner: Infinite Sync</title>
+    <title>Neural Summoner: God Mode</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.2/peerjs.min.js"></script>
     <style>
-        body { font-family: 'Palatino', serif; background: #050505; color: #d4af37; text-align: center; margin: 0; padding: 20px; }
+        body { font-family: 'Georgia', serif; background: #050505; color: #d4af37; text-align: center; margin: 0; padding: 20px; }
         #chat { height: 350px; border: 2px solid #332d21; overflow-y: auto; background: #000; margin: 10px auto; width: 95%; max-width: 650px; padding: 15px; border-radius: 10px; box-shadow: inset 0 0 30px #000; }
         
-        /* STILE CARTA PREMIUM */
-        .card-container { display: inline-block; margin: 20px; animation: summon 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .card-container { display: inline-block; margin: 20px; animation: summon 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; }
         .magic-card { 
             background: #171314; border-radius: 15px; padding: 12px; 
             box-shadow: 0 10px 40px rgba(0,0,0,1), 0 0 25px rgba(212, 175, 55, 0.4);
-            border: 4px solid #1a1a1a; transition: all 0.3s;
+            border: 4px solid #1a1a1a; transition: all 0.3s; color: white;
         }
-        .card-art { border: 2px solid #000; background: #111; border-radius: 8px; overflow: hidden; height: auto; }
-        .card-art img { width: 100%; display: block; filter: contrast(1.1) saturate(1.2); }
-        .card-title { font-weight: bold; color: gold; text-transform: uppercase; margin-bottom: 8px; font-size: 1em; letter-spacing: 1px; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        .card-art { border: 2px solid #000; background: #111; border-radius: 8px; overflow: hidden; }
+        .card-art img { width: 100%; display: block; filter: contrast(1.1) saturate(1.2); min-height: 200px; }
+        .card-title { font-weight: bold; color: gold; text-transform: uppercase; margin-bottom: 8px; font-size: 1em; letter-spacing: 1px; }
         
+        /* Statistiche stile Magic/Digimon */
+        .stats { position: absolute; bottom: 10px; right: 10px; background: rgba(200, 0, 0, 0.9); border: 2px solid gold; padding: 5px 10px; border-radius: 5px; font-weight: bold; color: white; font-family: monospace; box-shadow: 0 0 10px red; }
+
         .id-badge { color: #00ff41; font-family: monospace; padding: 10px; border: 1px solid #00ff41; margin-bottom: 15px; display: inline-block; background: rgba(0,255,65,0.05); }
         .controls { margin: 10px 0; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
         input { background: #111; border: 1px solid #332d21; color: #fff; padding: 12px; border-radius: 5px; width: 200px; }
-        .btn { padding: 12px 20px; cursor: pointer; font-weight: bold; border-radius: 5px; border: 1px solid #d4af37; background: #222; color: gold; transition: 0.3s; }
+        .btn { padding: 12px 20px; cursor: pointer; font-weight: bold; border-radius: 5px; border: 1px solid #d4af37; background: #222; color: gold; }
         .btn-evoke { background: linear-gradient(135deg, gold, #8a6d3b); color: #000; border: none; box-shadow: 0 0 15px gold; }
         
-        @keyframes summon { from { opacity: 0; transform: scale(0.2) rotate(-15deg); } to { opacity: 1; transform: scale(1) rotate(0); } }
+        @keyframes summon { from { opacity: 0; transform: scale(0.2) translateY(100px); } to { opacity: 1; transform: scale(1) translateY(0); } }
     </style>
 </head>
 <body>
-    <h1>🛰️ NEURAL SYNC: INFINITE</h1>
+    <h1>🛰️ NEURAL SYNC: GOD MODE</h1>
     <div class="id-badge">ID: <span id="my-id">Sincronizzazione...</span></div>
 
     <div id="chat"></div>
@@ -60,9 +62,9 @@
 
         function setup() {
             conn.on('open', () => {
-                document.getElementById('chat').innerHTML += "<p style='color:#00ff41'>[SISTEMA]: Menti allineate. Nessun limite rilevato.</p>";
+                document.getElementById('chat').innerHTML += "<p style='color:#00ff41'>[SISTEMA]: Collegamento totale. Generazione pronta.</p>";
                 conn.on('data', data => {
-                    if(data.type === 'SYNC_CARD') { mostraCarta(data.url, data.title, data.size); } 
+                    if(data.type === 'SYNC_CARD') { mostraCarta(data.url, data.title, data.size, data.atk, data.def); } 
                     else { mostraTesto(data, 'Amico'); }
                 });
             });
@@ -82,35 +84,43 @@
 
         async function comandoEvoca() {
             if(!dataStream.trim() || !conn) return alert("Scrivi e connettiti!");
-            
             const desc = dataStream.trim().toLowerCase();
-            const size = Math.min(500, Math.max(260, dataStream.length * 1.8));
+            const size = Math.min(480, Math.max(260, dataStream.length * 1.8));
             
-            // Usiamo l'API di Lexica per trovare immagini d'arte già generate (Niente Rate Limit!)
+            // Calcolo Statistiche basato sulla lunghezza e parole "belle"
+            let bonus = desc.includes("bello") || desc.includes("dolce") || desc.includes("luce") ? 2000 : 0;
+            const atk = Math.floor(Math.random() * 3000) + (dataStream.length * 20) + bonus;
+            const def = Math.floor(Math.random() * 2500) + (dataStream.length * 15) + bonus;
+
+            let imgUrl = "";
+
             try {
-                const response = await fetch(`https://lexica.art/api/v1/search?q=${encodeURIComponent(desc + " fantasy magic the gathering art")}`);
-                const data = await response.json();
-                
-                // Prendiamo una delle prime immagini (che sono le più belle)
-                const imgUrl = data.images[Math.floor(Math.random() * 5)].src;
-                
-                const cardData = { type: 'SYNC_CARD', url: imgUrl, title: desc.substring(0, 20), size: size };
-                conn.send(cardData);
-                mostraCarta(imgUrl, cardData.title, size);
-                dataStream = "";
+                // TENTA LEXICA (Alta Qualità)
+                const res = await fetch(`https://lexica.art/api/v1/search?q=${encodeURIComponent(desc + " fantasy digital painting")}`);
+                const data = await res.json();
+                if(data.images && data.images.length > 0) {
+                    imgUrl = data.images[Math.floor(Math.random() * 5)].src;
+                } else { throw new Error("No Lexica"); }
             } catch (e) {
-                alert("Errore nel multiverso. Riprova con altre parole.");
+                // BACKUP FALLBACK (Non fallisce mai)
+                imgUrl = `https://loremflickr.com/512/720/${encodeURIComponent(desc.split(' ')[0])},fantasy,art/all?lock=${Math.random()}`;
             }
+            
+            const cardData = { type: 'SYNC_CARD', url: imgUrl, title: desc.substring(0, 20), size: size, atk: atk, def: def };
+            conn.send(cardData);
+            mostraCarta(imgUrl, cardData.title, size, atk, def);
+            dataStream = "";
         }
 
-        function mostraCarta(url, title, size) {
+        function mostraCarta(url, title, size, atk, def) {
             const b = document.getElementById('chat');
             b.innerHTML += `
                 <div class="card-container">
                     <div class="magic-card" style="width: ${size}px;">
                         <div class="card-title">${title}</div>
-                        <div class="card-art"><img src="${url}" alt="Neural Art"></div>
-                        <div style="font-size: 0.6em; margin-top: 8px; color: gold; text-shadow: 1px 1px #000;">STILE: PURE FANTASY ART</div>
+                        <div class="card-art"><img src="${url}" onerror="this.src='https://loremflickr.com/512/720/monster,fantasy/all'"></div>
+                        <div style="font-size: 0.6em; margin-top: 8px; color: gold; font-style: italic;">Neural Entity Summoned</div>
+                        <div class="stats">${atk} / ${def}</div>
                     </div>
                 </div>`;
             b.scrollTop = b.scrollHeight;
