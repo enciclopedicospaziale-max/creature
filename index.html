@@ -62,26 +62,32 @@
         }
 
         function evocaCreatura() {
-            const b = document.getElementById('chat');
-            let tipo = "set4"; // Default: Kittens
-            
-            // Logica delle parole magiche
-            if(testoTotale.includes("fuoco") || testoTotale.includes("rabbia")) tipo = "set2"; // Mostri
-            if(testoTotale.includes("robot") || testoTotale.includes("tecnologia")) tipo = "set1"; // Robot
-            if(testoTotale.includes("spazio") || testoTotale.includes("alieno")) tipo = "set5"; // Alieni
-            
-            // Grandezza basata sulla lunghezza del testo
-            let dimensione = Math.min(300, 100 + (testoTotale.length / 2));
-            
-            const idCreatura = Math.random();
-            b.innerHTML += `
-                <div class="creatura-box">
-                    <h3 style="color: gold;">✨ CREATURA LIVELLO ${msgCount/5} ✨</h3>
-                    <img src="https://robohash.org/${idCreatura}?set=${tipo}" style="width: ${dimensione}px;">
-                    <p>La creatura è cresciuta grazie alle vostre parole!</p>
-                </div>`;
-            testoTotale = ""; // Reset per la prossima evoluzione
+    const b = document.getElementById('chat');
+    // Scegliamo un tema in base alle parole usate
+    let tema = "fantasy,monster"; 
+    
+    if(testoTotale.includes("drago") || testoTotale.includes("fuoco")) tema = "dragon,fire";
+    if(testoTotale.includes("cavaliere") || testoTotale.includes("spada")) tema = "knight,armor";
+    if(testoTotale.includes("mago") || testoTotale.includes("magia")) tema = "wizard,spell";
+    if(testoTotale.includes("oscuro") || testoTotale.includes("morte")) tema = "demon,dark";
+
+    // Dimensione basata sulla lunghezza dei messaggi (fino a 400px per le carte "leggendarie")
+    let dimensione = Math.min(400, 200 + (testoTotale.length / 5));
+    
+    // Usiamo Source Unsplash con filtri fantasy per somigliare a Magic
+    const urlImmagine = `https://loremflickr.com/400/600/${tema}/all`;
+
+    b.innerHTML += `
+        <div class="creatura-box" style="border: 4px solid #332d21; background: linear-gradient(135deg, #1a1a1a, #2c2c2c); color: #e0e0e0; box-shadow: 0 10px 20px rgba(0,0,0,0.5); padding: 10px; border-radius: 10px; max-width: ${dimensione}px;">
+            <h3 style="color: gold; text-transform: uppercase; font-size: 1em;">⚔️ Evocazione Magic ⚔️</h3>
+            <img src="${urlImmagine}" style="width: 100%; border: 2px solid #000; border-radius: 5px;">
+            <p style="font-style: italic; font-size: 0.8em; margin-top: 10px;">"Nata dalle parole: ${testoTotale.substring(0, 30)}..."</p>
+        </div>`;
+    
+    testoTotale = ""; // Reset per la prossima carta
+}
         }
     </script>
 </body>
 </html>
+
