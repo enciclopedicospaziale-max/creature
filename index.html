@@ -412,9 +412,14 @@
         CLICCA QUI PER CONNETTERTI AL TUO AMICO
     </button>
 </div>
+    peer.on('open', id => {
+    document.getElementById('display-id').innerText = id;
+    console.log("ID generato: " + id);
+});
 </body>
 
 </html>
+
 
 
 
