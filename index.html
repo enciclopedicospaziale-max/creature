@@ -1,47 +1,111 @@
-function evocaManuale() {
-    if(!dataStream.trim()) { alert("Il sistema non ha abbastanza dati per l'evocazione!"); return; }
-    
-    const b = document.getElementById('chat');
-    const testoBasso = dataStream.toLowerCase();
-    
-    // Logica Tema Fantasy/Digital
-    let tag = "fantasy,painting";
-    if(testoBasso.includes("fuoco") || testoBasso.includes("drago")) tag = "dragon,fire,conceptart";
-    if(testoBasso.includes("tecnologia") || testoBasso.includes("robot")) tag = "cyberpunk,cyborg,illustration";
-    if(testoBasso.includes("natura") || testoBasso.includes("bosco")) tag = "forest,mystical,creature";
-    if(testoBasso.includes("spazio") || testoBasso.includes("alieno")) tag = "alien,planet,scifi";
-    
-    const sporco = ["cazzo", "merda", "vaffanculo", "schifo"].some(p => testoBasso.includes(p));
-    if(sporco) tag = "glitch,dark,horror,abstract";
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Neural Magic Summoner</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        body { font-family: 'Georgia', serif; background: #050505; color: #e0e0e0; text-align: center; margin: 0; padding: 20px; }
+        #chat { height: 350px; border: 2px solid #332d21; overflow-y: auto; background: #000; margin: 10px auto; width: 95%; max-width: 600px; padding: 15px; border-radius: 8px; box-shadow: inset 0 0 20px #000; }
+        .card-container { display: inline-block; margin: 20px; animation: fadeIn 0.5s ease-out; }
+        .magic-card { background: #171314; border: 6px solid #1a1a1a; border-radius: 12px; padding: 12px; box-shadow: 0 10px 30px #000; position: relative; color: #fff; border: 4px solid gold; }
+        .card-art { border: 2px solid #000; background: #222; height: 200px; overflow: hidden; }
+        .card-art img { width: 100%; height: 100%; object-fit: cover; }
+        .card-info { background: rgba(255,255,255,0.05); margin-top: 8px; padding: 8px; border: 1px solid #444; text-align: left; font-size: 0.8em; min-height: 50px; }
+        .stats-hex { position: absolute; bottom: 8px; right: 8px; background: #c72c2c; border: 2px solid gold; padding: 4px 10px; font-weight: bold; border-radius: 5px; }
+        .id-badge { color: #00ff41; font-family: monospace; margin-bottom: 15px; border: 1px solid #00ff41; padding: 5px; display: inline-block; }
+        .controls { margin-top: 15px; }
+        input { background: #111; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 5px; margin: 5px; }
+        .btn { padding: 10px 20px; cursor: pointer; font-weight: bold; border-radius: 5px; border: none; }
+        .btn-evoke { background: linear-gradient(gold, darkgoldenrod); color: black; text-transform: uppercase; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+<body>
+    <h1>📜 NEURAL SUMMONER</h1>
+    <div class="id-badge">IL TUO ID: <span id="my-id">Caricamento...</span></div>
 
-    // GENERATORE DI UNICITÀ (Lock variabile)
-    // Usiamo il timestamp attuale per forzare un'immagine sempre nuova
-    const uniqueID = Date.now(); 
+    <div id="chat"></div>
+
+    <div class="controls">
+        <input type="text" id="friend-id" placeholder="ID Amico">
+        <button class="btn" onclick="connetti()" style="background:#333; color:white;">CONNETTI</button>
+    </div>
     
-    let larghezza = Math.min(450, Math.max(220, dataStream.length * 1.5));
-    let potenza = Math.floor(Math.random() * (dataStream.length * 10)) + 500;
+    <div class="controls">
+        <input type="text" id="msg" placeholder="Scrivi qui...">
+        <button class="btn" onclick="invia()" style="background:#444; color:white;">INVIA</button>
+        <button class="btn btn-evoke" onclick="evocaManuale()">✨ EVOCA ✨</button>
+    </div>
 
-    // Nuovo URL che forza la variazione
-    const imgUrl = `https://loremflickr.com/600/800/${tag}/all?lock=${uniqueID}`;
+    <script>
+        const peer = new Peer();
+        let conn;
+        let dataStream = "";
 
-    b.innerHTML += `
-        <div class="card-container">
-            <div class="magic-card" style="width: ${larghezza}px; border-color: ${sporco ? '#ff0055' : 'gold'};">
-                <div style="font-size: 0.7em; color: gold; margin-bottom: 5px; text-transform: uppercase;">
-                    ${sporco ? '⚠️ Entity Corrupted ⚠️' : '✨ Digital Summon ✨'}
-                </div>
-                <div class="card-art">
-                    <img src="${imgUrl}" style="filter: contrast(1.1) brightness(1.1); min-height: 200px;">
-                </div>
-                <div class="card-info">
-                    <div style="font-weight: bold; color: gold; margin-bottom: 3px;">${tag.split(',')[0]} Type</div>
-                    <i>"${dataStream.substring(0, 100)}..."</i>
-                </div>
-                <div class="stats-hex">${potenza} DP</div>
-            </div>
-        </div>`;
-    
-    dataStream = ""; 
-    b.scrollTop = b.scrollHeight;
-}
+        peer.on('open', id => document.getElementById('my-id').innerText = id);
+        peer.on('connection', c => { conn = c; setup(); });
 
+        function connetti() {
+            conn = peer.connect(document.getElementById('friend-id').value);
+            setup();
+        }
+
+        function setup() {
+            conn.on('open', () => {
+                alert("CONNESSO!");
+                conn.on('data', data => mostra(data, 'Amico'));
+            });
+        }
+
+        function invia() {
+            const m = document.getElementById('msg').value;
+            if(conn && m) { conn.send(m); mostra(m, 'Tu'); document.getElementById('msg').value = ''; }
+        }
+
+        function mostra(t, chi) {
+            dataStream += " " + t;
+            const b = document.getElementById('chat');
+            b.innerHTML += `<p><b>${chi}:</b> ${t}</p>`;
+            b.scrollTop = b.scrollHeight;
+        }
+
+        function evocaManuale() {
+            if(!dataStream.trim()) return;
+            const b = document.getElementById('chat');
+            const testo = dataStream.toLowerCase();
+            
+            let tag = "fantasy";
+            if(testo.includes("drago") || testo.includes("fuoco")) tag = "dragon";
+            if(testo.includes("robot") || testo.includes("cyber")) tag = "robot";
+            if(testo.includes("mare") || testo.includes("acqua")) tag = "ocean";
+            
+            const sporco = ["cazzo", "merda", "vaffanculo", "schifo"].some(p => testo.includes(p));
+            if(sporco) tag = "glitch";
+
+            // Nuovo sistema per immagini uniche
+            const rand = Math.floor(Math.random() * 10000);
+            const imgUrl = `https://picsum.photos/seed/${rand}/600/800`;
+            
+            let larghezza = Math.min(400, Math.max(200, dataStream.length * 1.5));
+            let potenza = Math.floor(Math.random() * 5000) + 500;
+
+            b.innerHTML += `
+                <div class="card-container">
+                    <div class="magic-card" style="width: ${larghezza}px;">
+                        <div class="card-art">
+                            <img src="${imgUrl}">
+                        </div>
+                        <div class="card-info">
+                            <i>"${dataStream.substring(0, 60)}..."</i>
+                        </div>
+                        <div class="stats-hex">${potenza} DP</div>
+                    </div>
+                </div>`;
+            
+            dataStream = "";
+            b.scrollTop = b.scrollHeight;
+        }
+    </script>
+</body>
+</html>
