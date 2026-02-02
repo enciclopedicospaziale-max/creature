@@ -318,5 +318,42 @@
         evokeBtn.addEventListener('click', evoke);
         input.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
     </script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<script>
+    const peer = new Peer(); // Crea il tuo ID unico
+    let conn;
+
+    // Quando apri la pagina, ti assegna un ID
+    peer.on('open', (id) => {
+        console.log('Il tuo ID chat è: ' + id);
+        alert('Dai questo codice al tuo amico: ' + id);
+    });
+
+    // Quando il tuo amico si connette a te
+    peer.on('connection', (c) => {
+        conn = c;
+        setupChat();
+    });
+
+    function connettiAlloAmico(idAmico) {
+        conn = peer.connect(idAmico);
+        setupChat();
+    }
+
+    function setupChat() {
+        conn.on('data', (data) => {
+            // Qui il codice per far apparire il messaggio dell'amico a schermo
+            document.querySelector('.chat-window').innerHTML += `<p>Amico: ${data}</p>`;
+        });
+    }
+
+    // Modifica la tua funzione "Invia" esistente così:
+    function inviaMessaggio() {
+        const msg = document.querySelector('input').value;
+        if (conn) conn.send(msg); // Invia all'amico!
+        document.querySelector('.chat-window').innerHTML += `<p>Tu: ${msg}</p>`;
+    }
+</script>
 </body>
+
 </html>
