@@ -1,127 +1,47 @@
-<!DOCTYPE html>
-<html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <title>Neural Magic Evocation</title>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <style>
-        body { font-family: 'Georgia', serif; background: #050505; color: #e0e0e0; text-align: center; margin: 0; padding: 20px; }
-        #chat { height: 300px; border: 1px solid #332d21; overflow-y: auto; background: #0a0a0a; margin: 10px auto; width: 95%; max-width: 600px; padding: 15px; border-radius: 8px; box-shadow: inset 0 0 20px #000; }
-        
-        /* STILE CARTA MAGIC/DIGIMON */
-        .card-container {
-            perspective: 1000px;
-            display: inline-block;
-            margin: 20px;
-            animation: fadeIn 0.8s ease-out;
-        }
-        .magic-card {
-            background: #171314; border: 6px solid #1a1a1a; border-radius: 12px;
-            padding: 10px; box-shadow: 0 15px 35px rgba(0,0,0,0.9), 0 0 15px rgba(255,215,0,0.2);
-            position: relative; overflow: hidden; color: #fff;
-        }
-        .card-art { border: 2px solid #000; background: #222; overflow: hidden; line-height: 0; }
-        .card-art img { width: 100%; object-fit: cover; }
-        .card-info { background: rgba(255,255,255,0.05); margin-top: 8px; padding: 8px; border: 1px solid #444; border-radius: 4px; text-align: left; font-size: 0.85em; min-height: 40px; }
-        .stats-box { position: absolute; bottom: 8px; right: 8px; background: #c72c2c; border: 2px solid gold; padding: 4px 8px; font-weight: bold; border-radius: 4px; color: white; text-shadow: 1px 1px #000; }
-        
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.5) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-
-        .controls { margin-top: 20px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
-        input { background: #111; border: 1px solid #332d21; color: #fff; padding: 12px; border-radius: 5px; width: 250px; }
-        .btn-send { background: #333; color: #eee; border: 1px solid #555; padding: 10px 20px; cursor: pointer; }
-        .btn-evoke { background: linear-gradient(to bottom, #4a3c28, #2a1f14); color: gold; border: 2px solid gold; padding: 10px 30px; cursor: pointer; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; }
-        .btn-evoke:hover { box-shadow: 0 0 15px gold; transform: scale(1.05); }
-    </style>
-</head>
-<body>
-    <h1>📜 NEURAL MAGIC SUMMONER</h1>
-    <div style="color: #00ff41; font-family: monospace; margin-bottom: 10px;">ID: <span id="my-id">...</span></div>
-
-    <div id="chat"></div>
-
-    <div class="controls">
-        <input type="text" id="friend-id" placeholder="Neural ID Amico">
-        <button class="btn-send" onclick="connetti()">LINK</button>
-    </div>
+function evocaManuale() {
+    if(!dataStream.trim()) { alert("Il sistema non ha abbastanza dati per l'evocazione!"); return; }
     
-    <div class="controls">
-        <input type="text" id="msg" placeholder="Scrivi il tuo destino...">
-        <button class="btn-send" onclick="invia()">INVIA</button>
-        <button class="btn-evoke" onclick="evocaManuale()">✨ EVOCA ✨</button>
-    </div>
+    const b = document.getElementById('chat');
+    const testoBasso = dataStream.toLowerCase();
+    
+    // Logica Tema Fantasy/Digital
+    let tag = "fantasy,painting";
+    if(testoBasso.includes("fuoco") || testoBasso.includes("drago")) tag = "dragon,fire,conceptart";
+    if(testoBasso.includes("tecnologia") || testoBasso.includes("robot")) tag = "cyberpunk,cyborg,illustration";
+    if(testoBasso.includes("natura") || testoBasso.includes("bosco")) tag = "forest,mystical,creature";
+    if(testoBasso.includes("spazio") || testoBasso.includes("alieno")) tag = "alien,planet,scifi";
+    
+    const sporco = ["cazzo", "merda", "vaffanculo", "schifo"].some(p => testoBasso.includes(p));
+    if(sporco) tag = "glitch,dark,horror,abstract";
 
-    <script>
-        const peer = new Peer();
-        let conn;
-        let dataStream = "";
+    // GENERATORE DI UNICITÀ (Lock variabile)
+    // Usiamo il timestamp attuale per forzare un'immagine sempre nuova
+    const uniqueID = Date.now(); 
+    
+    let larghezza = Math.min(450, Math.max(220, dataStream.length * 1.5));
+    let potenza = Math.floor(Math.random() * (dataStream.length * 10)) + 500;
 
-        peer.on('open', id => document.getElementById('my-id').innerText = id);
-        peer.on('connection', c => { conn = c; setup(); });
+    // Nuovo URL che forza la variazione
+    const imgUrl = `https://loremflickr.com/600/800/${tag}/all?lock=${uniqueID}`;
 
-        function connetti() {
-            conn = peer.connect(document.getElementById('friend-id').value);
-            setup();
-        }
+    b.innerHTML += `
+        <div class="card-container">
+            <div class="magic-card" style="width: ${larghezza}px; border-color: ${sporco ? '#ff0055' : 'gold'};">
+                <div style="font-size: 0.7em; color: gold; margin-bottom: 5px; text-transform: uppercase;">
+                    ${sporco ? '⚠️ Entity Corrupted ⚠️' : '✨ Digital Summon ✨'}
+                </div>
+                <div class="card-art">
+                    <img src="${imgUrl}" style="filter: contrast(1.1) brightness(1.1); min-height: 200px;">
+                </div>
+                <div class="card-info">
+                    <div style="font-weight: bold; color: gold; margin-bottom: 3px;">${tag.split(',')[0]} Type</div>
+                    <i>"${dataStream.substring(0, 100)}..."</i>
+                </div>
+                <div class="stats-hex">${potenza} DP</div>
+            </div>
+        </div>`;
+    
+    dataStream = ""; 
+    b.scrollTop = b.scrollHeight;
+}
 
-        function setup() {
-            conn.on('open', () => {
-                document.getElementById('chat').innerHTML += "<p style='color:cyan;'>[LINK ATTIVO]</p>";
-                conn.on('data', data => mostra(data, 'Amico'));
-            });
-        }
-
-        function invia() {
-            const m = document.getElementById('msg').value;
-            if(conn && m) { conn.send(m); mostra(m, 'Tu'); document.getElementById('msg').value = ''; }
-        }
-
-        function mostra(t, chi) {
-            dataStream += " " + t;
-            const b = document.getElementById('chat');
-            b.innerHTML += `<p><b>${chi}:</b> ${t}</p>`;
-            b.scrollTop = b.scrollHeight;
-        }
-
-        function evocaManuale() {
-            if(!dataStream.trim()) { alert("Scrivi qualcosa prima di evocare!"); return; }
-            
-            const b = document.getElementById('chat');
-            const testoBasso = dataStream.toLowerCase();
-            
-            // Logica Tema
-            let tag = "fantasy,illustration,epic";
-            if(testoBasso.includes("fuoco") || testoBasso.includes("drago")) tag = "dragon,fire,fantasy";
-            if(testoBasso.includes("tecnologia") || testoBasso.includes("robot")) tag = "cyberpunk,robot,mecha";
-            if(testoBasso.includes("natura") || testoBasso.includes("bosco")) tag = "forest,spirit,nature";
-            
-            // Analisi Lessico (Sporco = Distorto)
-            const sporco = ["cazzo", "merda", "vaffanculo", "schifo"].some(p => testoBasso.includes(p));
-            if(sporco) tag = "glitch,abstract,dark,horror";
-
-            // Dimensione basata su lunghezza (più scrivi, più è imponente)
-            let larghezza = Math.min(450, Math.max(220, dataStream.length * 1.5));
-            let potenza = Math.floor(Math.random() * (dataStream.length * 10)) + 500;
-
-            const imgUrl = `https://loremflickr.com/600/800/${tag}/all?lock=${Math.random()}`;
-
-            b.innerHTML += `
-                <div class="card-container">
-                    <div class="magic-card" style="width: ${larghezza}px;">
-                        <div style="font-size: 0.7em; color: gold; margin-bottom: 5px;">${sporco ? 'CORRUPTED ENTITY' : 'LEGENDARY SUMMON'}</div>
-                        <div class="card-art">
-                            <img src="${imgUrl}" style="filter: contrast(${sporco ? 1.5 : 1.1}) saturate(${sporco ? 2 : 1});">
-                        </div>
-                        <div class="card-info">
-                            <i>"${dataStream.substring(0, 80)}${dataStream.length > 80 ? '...' : ''}"</i>
-                        </div>
-                        <div class="stats-hex">${potenza} DP</div>
-                    </div>
-                </div>`;
-            
-            dataStream = ""; // Svuota il "calderone" dopo l'evocazione
-            b.scrollTop = b.scrollHeight;
-        }
-    </script>
-</body>
-</html>
