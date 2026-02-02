@@ -1,83 +1,86 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>Global Evocation Chat</title>
+    <title>Sogni-Mon Evoluzione</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        body { font-family: sans-serif; background: #1a1a2e; color: white; text-align: center; padding: 20px; }
-        #chat { height: 300px; border: 2px solid #444; overflow-y: auto; background: #16213e; margin: 20px auto; width: 90%; max-width: 500px; padding: 10px; border-radius: 10px; }
-        .id-label { font-size: 1.2em; color: #00ff41; margin-bottom: 20px; }
-        input { padding: 10px; border-radius: 5px; border: none; width: 200px; }
-        button { padding: 10px 20px; background: #e94560; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #ff5e78; }
+        body { font-family: 'Courier New', monospace; background: #050505; color: #00ff41; text-align: center; padding: 20px; }
+        #chat { height: 250px; border: 1px solid #00ff41; overflow-y: auto; background: #000; margin: 20px auto; width: 90%; padding: 10px; border-radius: 5px; text-align: left; }
+        .creatura-box { border: 2px solid #00ff41; padding: 15px; margin-top: 10px; background: #111; border-radius: 15px; display: inline-block; }
+        input { background: #000; border: 1px solid #00ff41; color: #00ff41; padding: 10px; width: 60%; }
+        button { background: #00ff41; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
-    <h1>🧬 Global Evocation Chat</h1>
-    
-    <div class="id-label">IL TUO ID: <span id="my-id">...generando...</span></div>
-
+    <h1>🧬 GLOBAL EVOCATION SYSTEM</h1>
+    <div style="margin-bottom: 10px;">IL TUO ID: <span id="my-id">...</span></div>
     <div id="chat"></div>
-
-    <div style="margin-bottom: 10px;">
-        <input type="text" id="friend-id" placeholder="Incolla ID amico">
-        <button onclick="connetti()">CONNETTI</button>
-    </div>
-    
-    <div>
-        <input type="text" id="msg" placeholder="Scrivi un messaggio...">
-        <button onclick="invia()">INVIA</button>
-    </div>
+    <input type="text" id="friend-id" placeholder="ID Amico">
+    <button onclick="connetti()">CONNETTI</button>
+    <hr style="border: 0.5px solid #222;">
+    <input type="text" id="msg" placeholder="Descrivi il tuo sogno...">
+    <button onclick="invia()">INVIA</button>
 
     <script>
         const peer = new Peer();
         let conn;
-        let messaggiRicevuti = 0;
+        let msgCount = 0;
+        let testoTotale = "";
 
-        peer.on('open', (id) => {
-            document.getElementById('my-id').innerText = id;
-        });
-
-        peer.on('connection', (c) => {
-            conn = c;
-            configuraChat();
-        });
+        peer.on('open', id => document.getElementById('my-id').innerText = id);
+        peer.on('connection', c => { conn = c; setup(); });
 
         function connetti() {
-            const idAmico = document.getElementById('friend-id').value;
-            conn = peer.connect(idAmico);
-            configuraChat();
+            conn = peer.connect(document.getElementById('friend-id').value);
+            setup();
         }
 
-        function configuraChat() {
-            conn.on('open', () => {
-                alert("Siete collegati!");
-                conn.on('data', (data) => {
-                    mostraInChat("Amico", data);
-                });
-            });
+        function setup() {
+            conn.on('data', data => mostra(data, 'Amico'));
+            conn.on('open', () => alert("Sincronizzazione neurale completata!"));
         }
 
         function invia() {
-            const testo = document.getElementById('msg').value;
-            if (conn && testo) {
-                conn.send(testo);
-                mostraInChat("Tu", testo);
+            const m = document.getElementById('msg').value;
+            if(conn && m) {
+                conn.send(m);
+                mostra(m, 'Tu');
                 document.getElementById('msg').value = '';
             }
         }
 
-        function mostraInChat(chi, testo) {
-            messaggiRicevuti++;
-            const chatBox = document.getElementById('chat');
-            chatBox.innerHTML += `<p><b>${chi}:</b> ${testo}</p>`;
+        function mostra(t, chi) {
+            msgCount++;
+            testoTotale += " " + t.toLowerCase();
+            const b = document.getElementById('chat');
+            b.innerHTML += `<p>> <b>${chi}:</b> ${t}</p>`;
             
-            // Logica dell'evocazione ogni 5 messaggi
-            if (messaggiRicevuti % 5 === 0) {
-                chatBox.innerHTML += `<h2 style="color: gold; text-shadow: 0 0 10px gold;">✨ EVOCAZIONE! ✨</h2>`;
+            if(msgCount % 5 === 0) {
+                evocaCreatura();
             }
-            chatBox.scrollTop = chatBox.scrollHeight;
+            b.scrollTop = b.scrollHeight;
+        }
+
+        function evocaCreatura() {
+            const b = document.getElementById('chat');
+            let tipo = "set4"; // Default: Kittens
+            
+            // Logica delle parole magiche
+            if(testoTotale.includes("fuoco") || testoTotale.includes("rabbia")) tipo = "set2"; // Mostri
+            if(testoTotale.includes("robot") || testoTotale.includes("tecnologia")) tipo = "set1"; // Robot
+            if(testoTotale.includes("spazio") || testoTotale.includes("alieno")) tipo = "set5"; // Alieni
+            
+            // Grandezza basata sulla lunghezza del testo
+            let dimensione = Math.min(300, 100 + (testoTotale.length / 2));
+            
+            const idCreatura = Math.random();
+            b.innerHTML += `
+                <div class="creatura-box">
+                    <h3 style="color: gold;">✨ CREATURA LIVELLO ${msgCount/5} ✨</h3>
+                    <img src="https://robohash.org/${idCreatura}?set=${tipo}" style="width: ${dimensione}px;">
+                    <p>La creatura è cresciuta grazie alle vostre parole!</p>
+                </div>`;
+            testoTotale = ""; // Reset per la prossima evoluzione
         }
     </script>
 </body>
