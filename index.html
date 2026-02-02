@@ -2,46 +2,46 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>MTG Neural Summoner</title>
+    <title>Neural Link: Evocation</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        body { font-family: 'Matrix', serif; background: #0a0a0a; color: #fff; text-align: center; margin: 0; padding: 20px; }
-        #chat { height: 300px; border: 2px solid #333; overflow-y: auto; background: #000; margin: 10px auto; width: 95%; max-width: 600px; padding: 15px; border-radius: 10px; box-shadow: inset 0 0 20px #000; }
+        body { font-family: 'Times New Roman', serif; background: #050505; color: #d4af37; text-align: center; margin: 0; padding: 20px; }
+        #chat { height: 300px; border: 2px solid #332d21; overflow-y: auto; background: #000; margin: 10px auto; width: 95%; max-width: 650px; padding: 15px; border-radius: 10px; box-shadow: inset 0 0 30px #000; }
         
-        /* STILE CARTA MAGIC */
-        .card-container { display: inline-block; margin: 20px; animation: summon 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .magic-card-frame { 
-            background: #171314; border-radius: 18px; padding: 12px; 
-            box-shadow: 0 0 30px rgba(0,0,0,1), 0 0 15px rgba(255,255,255,0.1);
-            transition: transform 0.3s;
+        .card-container { display: inline-block; margin: 25px; animation: portal 0.8s ease-out; position: relative; }
+        .magic-card { 
+            background: #171314; border-radius: 5%; padding: 10px; 
+            box-shadow: 0 0 20px rgba(0,0,0,1), 0 0 30px rgba(212, 175, 55, 0.3);
+            border: 4px solid #1a1a1a; transition: all 0.4s;
         }
-        .magic-card-frame:hover { transform: rotate(2deg) scale(1.05); }
-        .magic-card-frame img { width: 100%; border-radius: 14px; display: block; }
+        .magic-card img { width: 100%; border-radius: 4%; display: block; filter: brightness(1.1) contrast(1.1); }
         
-        .id-badge { color: #00ff41; font-family: monospace; margin-bottom: 15px; border: 1px solid #00ff41; padding: 8px; display: inline-block; border-radius: 5px; }
-        .controls { margin-top: 15px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
-        input { background: #111; border: 1px solid #444; color: #fff; padding: 12px; border-radius: 5px; width: 200px; }
-        .btn { padding: 12px 20px; cursor: pointer; font-weight: bold; border-radius: 5px; border: none; text-transform: uppercase; }
-        .btn-evoke { background: linear-gradient(45deg, #4a3c28, #1a1a1a); color: gold; border: 2px solid gold; box-shadow: 0 0 15px gold; }
+        @keyframes portal { from { opacity: 0; transform: scale(0.1) rotate(180deg); filter: hue-rotate(90deg); } to { opacity: 1; transform: scale(1) rotate(0deg); filter: hue-rotate(0deg); } }
         
-        @keyframes summon { from { opacity: 0; transform: scale(0) rotate(-20deg); } to { opacity: 1; transform: scale(1) rotate(0deg); } }
+        .id-badge { color: #00ff41; font-family: monospace; font-size: 0.9em; padding: 5px; border: 1px solid #00ff41; margin-bottom: 10px; display: inline-block; }
+        .controls { margin-top: 15px; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+        input { background: #111; border: 1px solid #d4af37; color: #fff; padding: 12px; border-radius: 5px; width: 180px; }
+        .btn { padding: 12px 18px; cursor: pointer; font-weight: bold; border-radius: 5px; border: 1px solid #d4af37; text-transform: uppercase; transition: 0.3s; }
+        .btn-send { background: #1a1a1a; color: #d4af37; }
+        .btn-evoke { background: linear-gradient(135deg, #d4af37, #8a6d3b); color: #000; box-shadow: 0 0 15px #d4af37; border: none; }
+        .btn-evoke:hover { transform: scale(1.1); box-shadow: 0 0 25px #d4af37; }
     </style>
 </head>
 <body>
-    <h1>🛰️ MTG NEURAL INTERFACE</h1>
-    <div class="id-badge">NEURAL ID: <span id="my-id">Sincronizzazione...</span></div>
+    <h1>🛰️ NEURAL SYNC: SUMMONER</h1>
+    <div class="id-badge">SYNC ID: <span id="my-id">In attesa...</span></div>
 
     <div id="chat"></div>
 
     <div class="controls">
-        <input type="text" id="friend-id" placeholder="ID Amico">
-        <button class="btn" onclick="connetti()" style="background:#222; color:white;">LINK</button>
+        <input type="text" id="friend-id" placeholder="Neural ID Amico">
+        <button class="btn btn-send" onclick="connetti()">LINK</button>
     </div>
     
     <div class="controls">
-        <input type="text" id="msg" placeholder="Scrivi il tuo grimorio...">
-        <button class="btn" onclick="invia()" style="background:#333; color:white;">INVIA</button>
-        <button class="btn btn-evoke" onclick="evocaMagic()">✨ EVOCA MAGIC ✨</button>
+        <input type="text" id="msg" placeholder="Digita i concetti...">
+        <button class="btn btn-send" onclick="invia()">INVIA</button>
+        <button class="btn btn-evoke" onclick="comandoEvoca()">✨ EVOCA ✨</button>
     </div>
 
     <script>
@@ -59,57 +59,68 @@
 
         function setup() {
             conn.on('open', () => {
-                alert("CONNESSIONE STABILITA");
-                conn.on('data', data => mostra(data, 'Amico'));
+                alert("MENTI SINCRONIZZATE");
+                conn.on('data', data => {
+                    if(data.type === 'EVOKE_CMD') {
+                        mostraCarta(data.url, data.text, data.size);
+                    } else {
+                        mostraTesto(data, 'Amico');
+                    }
+                });
             });
         }
 
         function invia() {
             const m = document.getElementById('msg').value;
-            if(conn && m) { conn.send(m); mostra(m, 'Tu'); document.getElementById('msg').value = ''; }
+            if(conn && m) { 
+                conn.send(m); 
+                mostraTesto(m, 'Tu'); 
+                document.getElementById('msg').value = ''; 
+            }
         }
 
-        function mostra(t, chi) {
+        function mostraTesto(t, chi) {
             dataStream += " " + t;
             const b = document.getElementById('chat');
-            b.innerHTML += `<p><b style="color:gold">${chi}:</b> ${t}</p>`;
+            b.innerHTML += `<p><b style="color:#d4af37">${chi}:</b> ${t}</p>`;
             b.scrollTop = b.scrollHeight;
         }
 
-        async function evocaMagic() {
-            if(!dataStream.trim()) return;
-            const b = document.getElementById('chat');
-            const testo = dataStream.toLowerCase();
+        async function comandoEvoca() {
+            if(!dataStream.trim() || !conn) return;
+            const testoPerRicerca = dataStream.trim();
             
-            // Cerchiamo carte basandoci sulle parole scritte
-            let query = "is:art"; 
-            if(testo.includes("drago") || testo.includes("fuoco")) query = "t:dragon";
-            if(testo.includes("morte") || testo.includes("oscuro")) query = "c:black t:creature";
-            if(testo.includes("angelo") || testo.includes("luce")) query = "t:angel";
-            if(testo.includes("robot") || testo.includes("artefatto")) query = "t:artifact t:creature";
-            
-            // Chiamata all'archivio Scryfall (Ufficiale Magic)
+            // Cerchiamo nell'archivio Magic/Digimon
             try {
-                const response = await fetch(`https://api.scryfall.com/cards/random?q=${query}`);
+                // Se il testo è lungo, cerchiamo carte Rare o Full Art
+                let filter = dataStream.length > 50 ? " (is:fullart or is:borderless)" : "";
+                const response = await fetch(`https://api.scryfall.com/cards/random?q=${testoPerRicerca}${filter} or t:creature`);
                 const card = await response.json();
-                const imgUrl = card.image_uris.normal;
+                const imgUrl = card.image_uris ? card.image_uris.normal : "https://cards.scryfall.io/normal/front/0/0/00000000-0000-0000-0000-000000000000.jpg";
                 
-                // Grandezza basata sullo scritto
-                let larghezza = Math.min(350, Math.max(240, dataStream.length * 1.2));
-
-                b.innerHTML += `
-                    <div class="card-container">
-                        <div class="magic-card-frame" style="width: ${larghezza}px;">
-                            <img src="${imgUrl}" alt="MTG Card">
-                            <div style="font-size:10px; color:gray; margin-top:5px;">Digital Soul: ${dataStream.length} pts</div>
-                        </div>
-                    </div>`;
+                const size = Math.min(450, Math.max(250, dataStream.length * 1.5));
                 
-                dataStream = ""; // Reset calderone
-                b.scrollTop = b.scrollHeight;
+                // Inviamo il comando di evocazione all'amico
+                conn.send({ type: 'EVOKE_CMD', url: imgUrl, text: dataStream, size: size });
+                
+                // Visualizziamo anche noi
+                mostraCarta(imgUrl, dataStream, size);
+                dataStream = ""; 
             } catch (e) {
-                alert("Errore evocazione: Il multiverso è instabile.");
+                alert("Flusso interrotto. Prova a scrivere parole più chiare (es. Balestra, Drago, Cavaliere)");
             }
+        }
+
+        function mostraCarta(url, testo, size) {
+            const b = document.getElementById('chat');
+            b.innerHTML += `
+                <div class="card-container">
+                    <div class="magic-card" style="width: ${size}px;">
+                        <img src="${url}">
+                        <div style="font-size:10px; color:gold; margin-top:5px; font-style:italic;">"${testo.substring(0,40)}..."</div>
+                    </div>
+                </div>`;
+            b.scrollTop = b.scrollHeight;
         }
     </script>
 </body>
