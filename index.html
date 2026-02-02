@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meta-Chat Evocazione</title>
+    <style>
+        :root {
+            --tg-bg: #0e1621;
+            --tg-sec: #17212b;
+            --tg-text: #ffffff;
+            --tg-blue: #2b5278;
+            --tg-msg-own: #2b5278;
+            --tg-msg-other: #182533;
+            --gold: #ffcf40;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-bg);
+            color: var(--tg-text);
+            margin: 0;
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar Simulazione Utenti */
+        #sidebar {
+            width: 260px;
+            background: var(--tg-sec);
+            border-right: 1px solid #000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-profile {
+            padding: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid #0e1621;
+        }
+
+        .user-profile.active {
+            background: var(--tg-blue);
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #527da3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* Chat Principale */
+        #main-chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+            background-size: cover;
+        }
+
+        #chat-header {
+            background: var(--tg-sec);
+            padding: 10px 20px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        #messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .msg {
+            max-width: 70%;
+            padding: 8px 12px;
+            border-radius: 10px;
+            position: relative;
+            font-size: 15px;
+            line-height: 1.4;
+        }
+
+        .msg.own {
+            align-self: flex-end;
+            background: var(--tg-msg-own);
+            border-bottom-right-radius: 2px;
+        }
+
+        .msg.other {
+            align-self: flex-start;
+            background: var(--tg-msg-other);
+            border-bottom-left-radius: 2px;
+        }
+
+        .msg-author {
+            font-size: 12px;
+            font-weight: bold;
+            color: #40a7e3;
+            margin-bottom: 4px;
+        }
+
+        /* Card Style */
+        .card-msg {
+            background: #1a1a1a;
+            border: 3px solid var(--gold);
+            border-radius: 10px;
+            overflow: hidden;
+            width: 250px;
+            margin: 10px 0;
+            box-shadow: 0 0 20px rgba(255, 207, 64, 0.3);
+        }
+
+        .card-img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .card-info {
+            padding: 10px;
+            background: linear-gradient(to top, #000, #333);
+            font-family: 'Georgia', serif;
+            font-size: 13px;
+            border-top: 2px solid var(--gold);
+        }
+
+        /* Input Area */
+        .input-bar {
+            background: var(--tg-sec);
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        input {
+            flex: 1;
+            background: var(--tg-bg);
+            border: none;
+            padding: 12px;
+            color: white;
+            border-radius: 8px;
+            outline: none;
+        }
+
+        button {
+            padding: 10px 18px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        #send-btn { background: #527da3; color: white; }
+        #evoke-btn { background: var(--gold); color: #000; }
+
+        .loader {
+            width: 20px; height: 20px; border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--gold); border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <div style="padding: 20px; font-weight: bold; color: #40a7e3;">CONTATTI</div>
+        <div class="user-profile active" onclick="switchUser('User1')">
+            <div class="avatar" style="background: #e17076;">U1</div>
+            <div>Utente 1 (Tu)</div>
+        </div>
+        <div class="user-profile" onclick="switchUser('User2')">
+            <div class="avatar" style="background: #7bc862;">U2</div>
+            <div>Utente 2</div>
+        </div>
+        <div class="user-profile" onclick="switchUser('User3')">
+            <div class="avatar" style="background: #65aadd;">U3</div>
+            <div>Utente 3</div>
+        </div>
+    </div>
+
+    <div id="main-chat">
+        <div id="chat-header">Global Evocation Chat - <span id="active-user-name">User1</span></div>
+        <div id="messages-container"></div>
+
+        <div class="input-bar">
+            <input type="text" id="input-text" placeholder="Scrivi un messaggio...">
+            <button id="send-btn">Invia</button>
+            <button id="evoke-btn">EVOCA</button>
+        </div>
+    </div>
+
+    <script>
+        const users = {
+            'User1': { name: 'Utente 1', color: '#e17076', history: [] },
+            'User2': { name: 'Utente 2', color: '#7bc862', history: [] },
+            'User3': { name: 'Utente 3', color: '#65aadd', history: [] }
+        };
+
+        let activeUser = 'User1';
+        const globalMessages = []; // Tutti i messaggi in ordine cronologico
+
+        const container = document.getElementById('messages-container');
+        const input = document.getElementById('input-text');
+        const evokeBtn = document.getElementById('evoke-btn');
+        const sendBtn = document.getElementById('send-btn');
+
+        function switchUser(userId) {
+            activeUser = userId;
+            document.querySelectorAll('.user-profile').forEach(p => p.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            document.getElementById('active-user-name').innerText = users[userId].name;
+            renderChat();
+        }
+
+        function sendMessage() {
+            const text = input.value.trim();
+            if (!text) return;
+
+            const msgObj = {
+                senderId: activeUser,
+                text: text,
+                type: 'text',
+                timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+            };
+
+            globalMessages.push(msgObj);
+            users[activeUser].history.push(text); // Salva nello storico dell'utente
+            input.value = '';
+            renderChat();
+        }
+
+        async function evoke() {
+            // Prendi gli ultimi 6 messaggi dell'utente attivo
+            const userHistory = users[activeUser].history;
+            const lastMessages = userHistory.slice(-6).join(", ");
+            
+            if (userHistory.length === 0) {
+                alert("Scrivi qualcosa prima di evocare!");
+                return;
+            }
+
+            // Aggiungi un placeholder di caricamento
+            const loaderId = 'load-' + Date.now();
+            globalMessages.push({ senderId: activeUser, type: 'loader', id: loaderId });
+            renderChat();
+
+            // Crea il prompt mixando Magic e Digimon
+            const prompt = `Magic The Gathering card style combined with Digimon aesthetic, creature illustration: ${lastMessages}, high fantasy, digital monsters, trading card art, detailed border, vibrant neon highlights, 8k resolution`;
+            const encodedPrompt = encodeURIComponent(prompt);
+            const seed = Math.floor(Math.random() * 100000);
+            const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=500&height=700&seed=${seed}&nologo=true`;
+
+            // Simuliamo il caricamento immagine
+            const img = new Image();
+            img.src = imageUrl;
+            img.onload = () => {
+                // Sostituisci il loader con la carta
+                const index = globalMessages.findIndex(m => m.id === loaderId);
+                globalMessages[index] = {
+                    senderId: activeUser,
+                    type: 'card',
+                    url: imageUrl,
+                    desc: lastMessages.substring(0, 50) + "..."
+                };
+                renderChat();
+            };
+        }
+
+        function renderChat() {
+            container.innerHTML = '';
+            globalMessages.forEach(msg => {
+                const isOwn = msg.senderId === activeUser;
+                const div = document.createElement('div');
+                div.className = `msg ${isOwn ? 'own' : 'other'}`;
+
+                if (msg.type === 'text') {
+                    div.innerHTML = `
+                        <div class="msg-author" style="color:${users[msg.senderId].color}">${users[msg.senderId].name}</div>
+                        <div>${msg.text}</div>
+                        <div style="font-size:10px; opacity:0.6; text-align:right;">${msg.timestamp}</div>
+                    `;
+                } else if (msg.type === 'loader') {
+                    div.innerHTML = `<div class="loader"></div>`;
+                } else if (msg.type === 'card') {
+                    div.className = 'card-msg';
+                    div.style.alignSelf = isOwn ? 'flex-end' : 'flex-start';
+                    div.innerHTML = `
+                        <img src="${msg.url}" class="card-img">
+                        <div class="card-info">
+                            <strong style="color:var(--gold)">EVOCAZIONE DI ${users[msg.senderId].name.toUpperCase()}</strong><br>
+                            <small>Potere derivato da: ${msg.desc}</small>
+                        </div>
+                    `;
+                }
+
+                container.appendChild(div);
+            });
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Event Listeners
+        sendBtn.addEventListener('click', sendMessage);
+        evokeBtn.addEventListener('click', evoke);
+        input.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+    </script>
+</body>
+</html>
