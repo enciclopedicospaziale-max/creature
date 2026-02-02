@@ -1,62 +1,83 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>Global Evocation Chat</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        body { font-family: sans-serif; background: #1a1a2e; color: white; text-align: center; }
-        #chatbox { height: 300px; border: 1px solid #444; overflow-y: scroll; padding: 10px; background: #16213e; margin: 20px auto; width: 80%; }
-        input { padding: 10px; border-radius: 5px; border: none; }
-        button { padding: 10px; background: #e94560; color: white; border: none; cursor: pointer; border-radius: 5px; }
+        body { font-family: sans-serif; background: #1a1a2e; color: white; text-align: center; padding: 20px; }
+        #chat { height: 300px; border: 2px solid #444; overflow-y: auto; background: #16213e; margin: 20px auto; width: 90%; max-width: 500px; padding: 10px; border-radius: 10px; }
+        .id-label { font-size: 1.2em; color: #00ff41; margin-bottom: 20px; }
+        input { padding: 10px; border-radius: 5px; border: none; width: 200px; }
+        button { padding: 10px 20px; background: #e94560; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #ff5e78; }
     </style>
 </head>
 <body>
     <h1>🧬 Global Evocation Chat</h1>
-    <div style="background: #0f3460; padding: 10px; margin-bottom: 10px;">
-        IL TUO ID: <span id="my-id" style="color: #00ff41; font-weight: bold;">Generazione...</span>
+    
+    <div class="id-label">IL TUO ID: <span id="my-id">...generando...</span></div>
+
+    <div id="chat"></div>
+
+    <div style="margin-bottom: 10px;">
+        <input type="text" id="friend-id" placeholder="Incolla ID amico">
+        <button onclick="connetti()">CONNETTI</button>
     </div>
-
-    <div id="chatbox"></div>
-
-    <input type="text" id="friend-id" placeholder="Incolla ID amico">
-    <button onclick="connetti()">CONNETTI</button>
-    <br><br>
-    <input type="text" id="msg" placeholder="Scrivi un messaggio...">
-    <button onclick="invia()">INVIA</button>
+    
+    <div>
+        <input type="text" id="msg" placeholder="Scrivi un messaggio...">
+        <button onclick="invia()">INVIA</button>
+    </div>
 
     <script>
         const peer = new Peer();
         let conn;
-        let count = 0;
+        let messaggiRicevuti = 0;
 
-        peer.on('open', id => { document.getElementById('my-id').innerText = id; });
-        peer.on('connection', c => { conn = c; setup(); });
+        peer.on('open', (id) => {
+            document.getElementById('my-id').innerText = id;
+        });
+
+        peer.on('connection', (c) => {
+            conn = c;
+            configuraChat();
+        });
 
         function connetti() {
-            conn = peer.connect(document.getElementById('friend-id').value);
-            setup();
+            const idAmico = document.getElementById('friend-id').value;
+            conn = peer.connect(idAmico);
+            configuraChat();
         }
 
-        function setup() {
-            conn.on('data', data => mostra(data, 'Amico'));
-            conn.on('open', () => alert("Siete connessi!"));
+        function configuraChat() {
+            conn.on('open', () => {
+                alert("Siete collegati!");
+                conn.on('data', (data) => {
+                    mostraInChat("Amico", data);
+                });
+            });
         }
 
         function invia() {
-            const m = document.getElementById('msg').value;
-            if(conn && m) {
-                conn.send(m);
-                mostra(m, 'Tu');
+            const testo = document.getElementById('msg').value;
+            if (conn && testo) {
+                conn.send(testo);
+                mostraInChat("Tu", testo);
                 document.getElementById('msg').value = '';
             }
         }
 
-        function mostra(t, chi) {
-            count++;
-            const b = document.getElementById('chatbox');
-            b.innerHTML += `<p><b>${chi}:</b> ${t}</p>`;
-            if(count % 5 === 0) b.innerHTML += `<h3 style="color:gold;">✨ EVOCAZIONE! ✨</h3>`;
-            b.scrollTop = b.scrollHeight;
+        function mostraInChat(chi, testo) {
+            messaggiRicevuti++;
+            const chatBox = document.getElementById('chat');
+            chatBox.innerHTML += `<p><b>${chi}:</b> ${testo}</p>`;
+            
+            // Logica dell'evocazione ogni 5 messaggi
+            if (messaggiRicevuti % 5 === 0) {
+                chatBox.innerHTML += `<h2 style="color: gold; text-shadow: 0 0 10px gold;">✨ EVOCAZIONE! ✨</h2>`;
+            }
+            chatBox.scrollTop = chatBox.scrollHeight;
         }
     </script>
 </body>
