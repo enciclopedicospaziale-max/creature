@@ -2,71 +2,81 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>AI Neural Summoner</title>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <title>AI Neural Summoner - Fixed</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.2/peerjs.min.js"></script>
     <style>
         body { font-family: 'Times New Roman', serif; background: #050505; color: #d4af37; text-align: center; margin: 0; padding: 20px; }
-        #chat { height: 300px; border: 2px solid #332d21; overflow-y: auto; background: #000; margin: 10px auto; width: 95%; max-width: 650px; padding: 15px; border-radius: 10px; box-shadow: inset 0 0 30px #000; }
+        #chat { height: 350px; border: 2px solid #332d21; overflow-y: auto; background: #000; margin: 10px auto; width: 95%; max-width: 650px; padding: 15px; border-radius: 10px; box-shadow: inset 0 0 30px #000; }
         
-        .card-container { display: inline-block; margin: 25px; animation: portal 0.8s ease-out; position: relative; }
+        .card-container { display: inline-block; margin: 20px; animation: portal 0.6s ease-out; }
         .magic-card { 
-            background: #171314; border-radius: 5%; padding: 10px; 
-            box-shadow: 0 0 20px rgba(0,0,0,1), 0 0 30px rgba(212, 175, 55, 0.3);
-            border: 4px solid #1a1a1a; transition: all 0.4s;
-            display: flex; flex-direction: column;
+            background: #171314; border-radius: 12px; padding: 10px; 
+            box-shadow: 0 0 30px rgba(0,0,0,1), 0 0 20px rgba(212, 175, 55, 0.4);
+            border: 4px solid #1a1a1a; width: 300px;
         }
-        .magic-card img { width: 100%; border-radius: 4%; display: block; filter: brightness(1.1) contrast(1.1); }
-        .card-title { font-weight: bold; color: gold; font-size: 1.1em; margin-bottom: 5px; text-transform: uppercase; }
-        .card-description { font-size: 0.8em; color: #ccc; text-align: left; margin-top: 5px; min-height: 40px; }
-        .card-stats { font-weight: bold; color: #ff4500; margin-top: 5px; text-align: right; }
-
-        @keyframes portal { from { opacity: 0; transform: scale(0.1) rotate(180deg); filter: hue-rotate(90deg); } to { opacity: 1; transform: scale(1) rotate(0deg); filter: hue-rotate(0deg); } }
+        .magic-card img { width: 100%; border-radius: 8px; border: 1px solid #000; }
+        .card-title { font-weight: bold; color: gold; text-transform: uppercase; margin-bottom: 5px; }
         
-        .id-badge { color: #00ff41; font-family: monospace; font-size: 0.9em; padding: 5px; border: 1px solid #00ff41; margin-bottom: 10px; display: inline-block; }
-        .controls { margin-top: 15px; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
-        input { background: #111; border: 1px solid #d4af37; color: #fff; padding: 12px; border-radius: 5px; width: 180px; }
-        .btn { padding: 12px 18px; cursor: pointer; font-weight: bold; border-radius: 5px; border: 1px solid #d4af37; text-transform: uppercase; transition: 0.3s; }
-        .btn-send { background: #1a1a1a; color: #d4af37; }
-        .btn-evoke { background: linear-gradient(135deg, #d4af37, #8a6d3b); color: #000; box-shadow: 0 0 15px #d4af37; border: none; }
-        .btn-evoke:hover { transform: scale(1.1); box-shadow: 0 0 25px #d4af37; }
+        .id-badge { color: #00ff41; font-family: monospace; padding: 10px; border: 1px solid #00ff41; margin-bottom: 15px; display: inline-block; background: rgba(0,255,65,0.1); }
+        .controls { margin: 10px 0; }
+        input { background: #111; border: 1px solid #d4af37; color: #fff; padding: 10px; border-radius: 5px; width: 200px; }
+        .btn { padding: 10px 20px; cursor: pointer; font-weight: bold; border-radius: 5px; border: 1px solid #d4af37; text-transform: uppercase; }
+        .btn-evoke { background: gold; color: #000; border: none; box-shadow: 0 0 10px gold; }
+        @keyframes portal { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
 <body>
     <h1>🧠 AI NEURAL SYNC</h1>
-    <div class="id-badge">SYNC ID: <span id="my-id">In attesa...</span></div>
+    <div class="id-badge">IL TUO ID: <span id="my-id">...GENERANDO...</span></div>
 
     <div id="chat"></div>
 
     <div class="controls">
-        <input type="text" id="friend-id" placeholder="Neural ID Amico">
-        <button class="btn btn-send" onclick="connetti()">LINK</button>
+        <input type="text" id="friend-id" placeholder="ID Amico">
+        <button class="btn" onclick="connetti()" style="background:#222; color:white;">LINK</button>
     </div>
     
     <div class="controls">
-        <input type="text" id="msg" placeholder="Digita il tuo prompt AI...">
-        <button class="btn btn-send" onclick="invia()">INVIA</button>
-        <button class="btn btn-evoke" onclick="comandoEvoca()">✨ GENERA AI ✨</button>
+        <input type="text" id="msg" placeholder="Scrivi qui...">
+        <button class="btn" onclick="invia()" style="background:#333; color:white;">INVIA</button>
+        <button class="btn btn-evoke" onclick="comandoEvoca()">✨ GENERA CARTA AI ✨</button>
     </div>
 
     <script>
-        const peer = new Peer();
+        // Avvio forzato di PeerJS
+        let peer = new Peer();
         let conn;
-        let dataStream = ""; // Accumula tutti i messaggi
+        let dataStream = "";
 
-        peer.on('open', id => document.getElementById('my-id').innerText = id);
-        peer.on('connection', c => { conn = c; setup(); });
+        peer.on('open', (id) => {
+            console.log('Mio ID:', id);
+            document.getElementById('my-id').innerText = id;
+        });
+
+        peer.on('error', (err) => {
+            console.error('Errore Peer:', err);
+            document.getElementById('my-id').innerText = "ERRORE CONNESSIONE";
+        });
+
+        peer.on('connection', (c) => {
+            conn = c;
+            setup();
+        });
 
         function connetti() {
-            conn = peer.connect(document.getElementById('friend-id').value);
+            const dest = document.getElementById('friend-id').value;
+            if(!dest) return alert("Inserisci l'ID dell'amico");
+            conn = peer.connect(dest);
             setup();
         }
 
         function setup() {
             conn.on('open', () => {
-                alert("MENTI SINCRONIZZATE: Connessione AI attiva!");
+                const b = document.getElementById('chat');
+                b.innerHTML += "<p style='color:#00ff41'>[SISTEMA]: Collegamento neurale riuscito.</p>";
                 conn.on('data', data => {
-                    if(data.type === 'EVOKE_AI_CMD') {
-                        mostraCarta(data.url, data.title, data.description, data.stats, data.size);
+                    if(data.type === 'AI_CARD') {
+                        mostraCarta(data.url, data.title, data.size);
                     } else {
                         mostraTesto(data, 'Amico');
                     }
@@ -84,50 +94,43 @@
         }
 
         function mostraTesto(t, chi) {
-            dataStream += " " + t; // Aggiunge il testo al flusso dati
+            dataStream += " " + t;
             const b = document.getElementById('chat');
-            b.innerHTML += `<p><b style="color:#d4af37">${chi}:</b> ${t}</p>`;
+            b.innerHTML += `<p><b>${chi}:</b> ${t}</p>`;
             b.scrollTop = b.scrollHeight;
         }
 
-        async function comandoEvoca() {
-            if(!dataStream.trim() || !conn) { 
-                alert("Necessari più concetti per la generazione AI!"); 
-                return; 
-            }
+        function comandoEvoca() {
+            if(!dataStream.trim() || !conn) return alert("Scrivi qualcosa prima o connettiti!");
             
-            const promptOriginale = dataStream.trim();
-            const promptAnalizzato = processaPromptAI(promptOriginale); // Analizza il testo per tag e sentimenti
+            const p = dataStream.trim().toLowerCase();
+            const size = Math.min(450, Math.max(250, p.length * 1.8));
             
-            // Grandezza basata sulla lunghezza del prompt
-            const size = Math.min(450, Math.max(250, promptOriginale.length * 1.5));
+            // Logica AI: costruisce un prompt basato sulle tue parole
+            let aiPrompt = `Magic the Gathering card art style, ${p}, high fantasy, detailed illustration, digital painting`;
+            if(p.includes("dolce") || p.includes("bello")) aiPrompt += ", majestic, ethereal, bright lighting";
+            if(p.includes("cattivo") || p.includes("sporco")) aiPrompt += ", dark, corrupted, creepy, high contrast";
             
-            // Simula la generazione AI con un motore di immagini avanzato
-            const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(promptAnalizzato)}?width=512&height=768&seed=${Date.now()}`;
+            const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(aiPrompt)}?width=512&height=720&seed=${Math.random()}`;
             
-            // Genera titolo e statistiche
-            const titolo = generaTitolo(promptOriginale);
-            const stats = generaStats(promptOriginale);
-
-            const cardData = { 
-                type: 'EVOKE_AI_CMD', 
-                url: imgUrl, 
-                title: titolo, 
-                description: promptOriginale.substring(0, 150) + "...", 
-                stats: stats,
-                size: size 
-            };
-            
-            conn.send(cardData); // Invia il comando di evocazione all'amico
-            mostraCarta(imgUrl, titolo, promptOriginale.substring(0, 150) + "...", stats, size); // Mostra anche a te
-            
-            dataStream = ""; // Resetta il flusso di dati per la prossima evocazione
+            const cardData = { type: 'AI_CARD', url: imgUrl, title: p.substring(0, 20), size: size };
+            conn.send(cardData);
+            mostraCarta(imgUrl, cardData.title, size);
+            dataStream = "";
         }
 
-        function processaPromptAI(text) {
-            let basePrompt = "Magic the Gathering style illustration, highly detailed, fantasy art, creature design, concept art, epic, trending on ArtStation, award winning, octane render, 8k --ar 2:3";
-            let tags = [];
-            let sentiment = 0; // -1 negativo, 0 neutro, 1 positivo
-
-            //
+        function mostraCarta(url, title, size) {
+            const b = document.getElementById('chat');
+            b.innerHTML += `
+                <div class="card-container">
+                    <div class="magic-card" style="width: ${size}px;">
+                        <div class="card-title">${title}</div>
+                        <img src="${url}">
+                    </div>
+                </div>`;
+            b.scrollTop = b.scrollHeight;
+        }
+    </script>
+</body>
+</html>
 
